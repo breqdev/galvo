@@ -1,0 +1,197 @@
+use crate::point::{COLOR_RED, Point};
+use alloc::vec::Vec;
+
+use crate::demos::Demo;
+
+const VERTS: [[f32; 3]; 8] = [
+    [-0.5, -0.5, -0.5],
+    [0.5, -0.5, -0.5],
+    [0.5, 0.5, -0.5],
+    [-0.5, 0.5, -0.5],
+    [-0.5, -0.5, 0.5],
+    [0.5, -0.5, 0.5],
+    [0.5, 0.5, 0.5],
+    [-0.5, 0.5, 0.5],
+];
+
+// Edges
+const EDGES: [[usize; 2]; 12] = [
+    [0, 1],
+    [1, 2],
+    [2, 3],
+    [3, 0],
+    [4, 5],
+    [5, 6],
+    [6, 7],
+    [7, 4],
+    [0, 4],
+    [1, 5],
+    [2, 6],
+    [3, 7],
+];
+
+fn map_to_dac(v: f32) -> u8 {
+    let x = v * 127.0 + 128.0;
+    x.clamp(0.0, 255.0) as u8
+}
+
+/*
+// Rotation state
+    let mut angle_x: f32 = 0.0;
+    let mut angle_y: f32 = 0.0;
+
+    loop {
+        // dac_y.write(0);
+        // led.write(brightness([RED].into_iter(), 10)).unwrap();
+        // Timer::after(Duration::from_secs(1)).await;
+        // dac_y.write(255);
+        // led.write(brightness([RED].into_iter(), 0)).unwrap();
+        // Timer::after(Duration::from_secs(1)).await;
+
+        angle_x += 0.02;
+        angle_y += 0.03;
+
+        for [i0, i1] in EDGES {
+            let v0 = VERTS[i0];
+            let v1 = VERTS[i1];
+
+            // Unpack vertices
+            let (x0, y0, z0) = (v0[0], v0[1], v0[2]);
+            let (x1, y1, z1) = (v1[0], v1[1], v1[2]);
+
+            let (cx, sx) = (libm::cosf(angle_x), libm::sinf(angle_x));
+            let (cy, sy) = (libm::cosf(angle_y), libm::sinf(angle_y));
+
+            // --- Rotate v0 ---
+            let y0r = y0 * cx - z0 * sx;
+            let z0r = y0 * sx + z0 * cx;
+            let x0r = x0 * cy + z0r * sy;
+            let z0r2 = -x0 * sy + z0r * cy;
+
+            // --- Rotate v1 ---
+            let y1r = y1 * cx - z1 * sx;
+            let z1r = y1 * sx + z1 * cx;
+            let x1r = x1 * cy + z1r * sy;
+            let z1r2 = -x1 * sy + z1r * cy;
+
+            // Perspective projection
+            let scale0 = 2.0 / (2.0 + z0r2);
+            let px0 = map_to_dac(x0r * scale0);
+            let py0 = map_to_dac(y0r * scale0);
+
+            let scale1 = 2.0 / (2.0 + z1r2);
+            let px1 = map_to_dac(x1r * scale1);
+            let py1 = map_to_dac(y1r * scale1);
+
+            // Draw line with stepping
+            let steps = 20;
+            for s in 0..=steps {
+                let t = s as f32 / steps as f32;
+
+                // Interpolate
+                let xi = px0 as f32 + t * (px1 as f32 - px0 as f32);
+                let yi = py0 as f32 + t * (py1 as f32 - py0 as f32);
+
+                dac_x.write(xi as u8);
+                dac_y.write(yi as u8);
+
+                if s == 0 {
+                    // Settling delay like Arduino's delayMicroseconds(300)
+                    delay.delay_micros(500);
+                }
+
+                // Turn laser ON
+                laser_red.set_high();
+
+                // DAC settling: ~50us
+                delay.delay_micros(50);
+            }
+
+            // Finished this edge → turn laser OFF
+            delay.delay_micros(200);
+            laser_red.set_low();
+        }
+    } */
+
+pub struct CubeDemo {}
+
+impl CubeDemo {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
+impl Demo for CubeDemo {
+    fn get_path(&self, frame: u64) -> Vec<Point> {
+        let angle_x = frame as f32 * 0.02;
+        let angle_y = frame as f32 * 0.03;
+
+        let mut points = Vec::new();
+
+        for [i0, i1] in EDGES {
+            let v0 = VERTS[i0];
+            let v1 = VERTS[i1];
+
+            // Unpack vertices
+            let (x0, y0, z0) = (v0[0], v0[1], v0[2]);
+            let (x1, y1, z1) = (v1[0], v1[1], v1[2]);
+
+            let (cx, sx) = (libm::cosf(angle_x), libm::sinf(angle_x));
+            let (cy, sy) = (libm::cosf(angle_y), libm::sinf(angle_y));
+
+            // --- Rotate v0 ---
+            let y0r = y0 * cx - z0 * sx;
+            let z0r = y0 * sx + z0 * cx;
+            let x0r = x0 * cy + z0r * sy;
+            let z0r2 = -x0 * sy + z0r * cy;
+
+            // --- Rotate v1 ---
+            let y1r = y1 * cx - z1 * sx;
+            let z1r = y1 * sx + z1 * cx;
+            let x1r = x1 * cy + z1r * sy;
+            let z1r2 = -x1 * sy + z1r * cy;
+
+            // Perspective projection
+            let scale0 = 2.0 / (2.0 + z0r2);
+            let px0 = map_to_dac(x0r * scale0);
+            let py0 = map_to_dac(y0r * scale0);
+
+            let scale1 = 2.0 / (2.0 + z1r2);
+            let px1 = map_to_dac(x1r * scale1);
+            let py1 = map_to_dac(y1r * scale1);
+
+            points.push(Point {
+                x: px0,
+                y: py0,
+                color: 0,
+                delay: 400,
+            });
+
+            // Draw line with stepping
+            let steps = 20;
+            for s in 0..=steps {
+                let t = s as f32 / steps as f32;
+
+                // Interpolate
+                let xi = px0 as f32 + t * (px1 as f32 - px0 as f32);
+                let yi = py0 as f32 + t * (py1 as f32 - py0 as f32);
+
+                points.push(Point {
+                    x: xi as u8,
+                    y: yi as u8,
+                    color: COLOR_RED,
+                    delay: 50,
+                });
+            }
+
+            points.push(Point {
+                x: px1,
+                y: py1,
+                color: COLOR_RED,
+                delay: 100,
+            });
+        }
+
+        points
+    }
+}
