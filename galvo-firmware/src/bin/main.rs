@@ -81,8 +81,8 @@ async fn main(spawner: Spawner) -> ! {
     let mut serial_buffer: [u8; 2048] = [0; 2048];
     let mut serial_rx_length: usize = 0;
 
-    let mut active_demo: Box<dyn apps::VectorApp> = Box::new(apps::alphabet::AlphabetDemo::new());
-    // let mut active_demo: Box<dyn apps::VectorApp> = Box::new(apps::cube::CubeDemo::new());
+    // let mut active_demo: Box<dyn apps::VectorApp> = Box::new(apps::alphabet::AlphabetDemo::new());
+    let mut active_demo: Box<dyn apps::VectorApp> = Box::new(apps::cube::CubeDemo::new());
 
     let mut frameno: u64 = 0;
 

@@ -7,7 +7,7 @@ use vector_apps::{
 
 pub fn painter(tx: Sender<Point>) {
     let mut app: Box<dyn VectorApp> = Box::new(CubeDemo::new());
-    // let app: Box<dyn VectorApp> = Box::new(AlphabetDemo::new());
+    // let mut app: Box<dyn VectorApp> = Box::new(AlphabetDemo::new());
 
     let mut frame = 0;
     loop {

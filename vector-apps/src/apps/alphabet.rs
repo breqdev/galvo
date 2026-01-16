@@ -17,15 +17,15 @@ impl AlphabetDemo {
 
         let mut points = text_to_path("12345678", 0, 32, 1.0, 1.0, color, fonts::ROMANS);
 
-        points.append(&mut text_to_path(
-            "12345678",
-            0,
-            64,
-            1.0,
-            1.0,
-            color,
-            fonts::ROMANS,
-        ));
+        // points.append(&mut text_to_path(
+        //     "12345678",
+        //     0,
+        //     64,
+        //     1.0,
+        //     1.0,
+        //     color,
+        //     fonts::ROMANS,
+        // ));
         points.append(&mut text_to_path(
             "!@#$%^&*",
             0,
@@ -35,15 +35,15 @@ impl AlphabetDemo {
             color,
             fonts::ROMANS,
         ));
-        points.append(&mut text_to_path(
-            "ABCDEFGH",
-            0,
-            128,
-            1.0,
-            1.0,
-            color,
-            fonts::ROMANS,
-        ));
+        // points.append(&mut text_to_path(
+        //     "ABCDEFGH",
+        //     0,
+        //     128,
+        //     1.0,
+        //     1.0,
+        //     color,
+        //     fonts::ROMANS,
+        // ));
         points.append(&mut text_to_path(
             "ABCDEFGH",
             0,
@@ -54,15 +54,15 @@ impl AlphabetDemo {
             fonts::ROMANS,
         ));
         // points.append(&mut text_to_path("abcdefgh", 255, 128, -1.0, 1.0));
-        points.append(&mut text_to_path(
-            "abcdefgh",
-            0,
-            192,
-            1.0,
-            1.0,
-            color,
-            fonts::ROMANS,
-        ));
+        // points.append(&mut text_to_path(
+        //     "abcdefgh",
+        //     0,
+        //     192,
+        //     1.0,
+        //     1.0,
+        //     color,
+        //     fonts::ROMANS,
+        // ));
         points.append(&mut text_to_path(
             "abcdefgh",
             0,
