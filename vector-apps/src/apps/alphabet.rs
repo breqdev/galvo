@@ -26,14 +26,15 @@ impl AlphabetDemo {
             color,
             fonts::ROMANS,
         ));
-        // points.append(&mut text_to_path(
-        //     "!@#$%^&*",
-        //     0,
-        //     96,
-        //     1.0,
-        //     1.0,
-        //     fonts::ROMANS,
-        // ));
+        points.append(&mut text_to_path(
+            "!@#$%^&*",
+            0,
+            96,
+            1.0,
+            1.0,
+            color,
+            fonts::ROMANS,
+        ));
         points.append(&mut text_to_path(
             "ABCDEFGH",
             0,
@@ -62,14 +63,15 @@ impl AlphabetDemo {
             color,
             fonts::ROMANS,
         ));
-        // points.append(&mut text_to_path(
-        //     "abcdefgh",
-        //     0,
-        //     224,
-        //     1.0,
-        //     1.0,
-        //     fonts::ROMANS,
-        // ));
+        points.append(&mut text_to_path(
+            "abcdefgh",
+            0,
+            224,
+            1.0,
+            1.0,
+            color,
+            fonts::ROMANS,
+        ));
 
         Self { points }
     }

@@ -1,5 +1,5 @@
 use crate::point::Point;
-use hershey_text::{HersheyRenderer, load_mapping};
+use hershey_text::{FontMapping, render_text};
 
 use alloc::vec::Vec;
 
@@ -14,13 +14,9 @@ pub fn text_to_path(
     x_scale: f32,
     y_scale: f32,
     color: u8,
-    font: &'static str,
+    font: FontMapping,
 ) -> Vec<Point> {
-    let renderer = HersheyRenderer::new();
-
-    let mapping = load_mapping(font).unwrap();
-
-    let strokes: Vec<_> = renderer.render_text(text, mapping);
+    let strokes: Vec<_> = render_text(text, font);
     let mut points = Vec::with_capacity(strokes.len());
 
     if let Some(first) = strokes.first() {
