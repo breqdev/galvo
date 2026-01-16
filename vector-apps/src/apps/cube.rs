@@ -153,7 +153,7 @@ impl CubeDemo {
 }
 
 impl VectorApp for CubeDemo {
-    fn get_path(&mut self, frame: u64) -> Path {
+    fn get_path(&mut self, frame: u64) -> &Path {
         let color = 1;
 
         let angle_x = frame as f32 * 0.02;
@@ -227,8 +227,6 @@ impl VectorApp for CubeDemo {
 
         self.points.extend(&self.static_points);
 
-        Path {
-            points: self.points.clone(),
-        }
+        &self.points
     }
 }

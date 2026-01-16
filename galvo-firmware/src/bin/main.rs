@@ -132,7 +132,7 @@ async fn main(spawner: Spawner) -> ! {
 
         frameno += 1;
 
-        for p in active_demo.get_path(frameno).points {
+        for p in active_demo.get_path(frameno) {
             // Output coordinates
             lasers.display(&p);
 

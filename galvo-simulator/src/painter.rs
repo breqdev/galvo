@@ -13,8 +13,8 @@ pub fn painter(tx: Sender<Point>) {
     loop {
         let path = app.get_path(frame);
 
-        for point in path.points {
-            tx.send(point).unwrap();
+        for point in path {
+            tx.send(*point).unwrap();
             thread::sleep(Duration::from_micros(point.delay as u64));
         }
 

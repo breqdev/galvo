@@ -76,9 +76,7 @@ impl AlphabetDemo {
 }
 
 impl VectorApp for AlphabetDemo {
-    fn get_path(&mut self, _frame: u64) -> Path {
-        Path {
-            points: self.points.clone(),
-        }
+    fn get_path(&mut self, _frame: u64) -> &Path {
+        &self.points
     }
 }

@@ -8,6 +8,4 @@ pub struct Point {
     pub delay: u16,
 }
 
-pub struct Path {
-    pub points: Vec<Point>,
-}
+pub type Path = Vec<Point>;
