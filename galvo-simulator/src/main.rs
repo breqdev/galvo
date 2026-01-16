@@ -3,11 +3,11 @@ use std::{
     thread,
 };
 
-use crate::{display::Display, painter::painter, point::Point};
+use crate::{display::Display, painter::painter};
+use vector_apps::point::Point;
 
 mod display;
 mod painter;
-mod point;
 
 fn main() -> eframe::Result<()> {
     let options = eframe::NativeOptions::default();

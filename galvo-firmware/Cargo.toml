@@ -76,7 +76,7 @@ serde = { version = "1.0", default-features = false, features = ["derive", "allo
 serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
 
 
-hershey-text ={ path = "../hershey-text" }
+vector-apps ={ path = "../vector-apps" }
 
 [profile.dev]
 # Rust debug is too slow.

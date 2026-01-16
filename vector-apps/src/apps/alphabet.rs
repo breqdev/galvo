@@ -1,7 +1,11 @@
 use alloc::vec::Vec;
 use hershey_text::fonts;
 
-use crate::{demos::Demo, point::Point, text::text_to_path};
+use crate::{
+    apps::VectorApp,
+    point::{Path, Point},
+    utils::text::text_to_path,
+};
 
 pub struct AlphabetDemo {
     points: Vec<Point>,
@@ -9,7 +13,9 @@ pub struct AlphabetDemo {
 
 impl AlphabetDemo {
     pub fn new() -> Self {
-        let mut points = text_to_path("12345678", 0, 32, 1.0, 1.0, fonts::ROMANS);
+        let color = 1;
+
+        let mut points = text_to_path("12345678", 0, 32, 1.0, 1.0, color, fonts::ROMANS);
 
         points.append(&mut text_to_path(
             "12345678",
@@ -17,6 +23,7 @@ impl AlphabetDemo {
             64,
             1.0,
             1.0,
+            color,
             fonts::ROMANS,
         ));
         // points.append(&mut text_to_path(
@@ -33,6 +40,7 @@ impl AlphabetDemo {
             128,
             1.0,
             1.0,
+            color,
             fonts::ROMANS,
         ));
         points.append(&mut text_to_path(
@@ -41,6 +49,7 @@ impl AlphabetDemo {
             160,
             1.0,
             1.0,
+            color,
             fonts::ROMANS,
         ));
         // points.append(&mut text_to_path("abcdefgh", 255, 128, -1.0, 1.0));
@@ -50,6 +59,7 @@ impl AlphabetDemo {
             192,
             1.0,
             1.0,
+            color,
             fonts::ROMANS,
         ));
         // points.append(&mut text_to_path(
@@ -65,8 +75,10 @@ impl AlphabetDemo {
     }
 }
 
-impl Demo for AlphabetDemo {
-    fn get_path(&self, _frame: u64) -> Vec<Point> {
-        self.points.clone()
+impl VectorApp for AlphabetDemo {
+    fn get_path(&mut self, _frame: u64) -> Path {
+        Path {
+            points: self.points.clone(),
+        }
     }
 }

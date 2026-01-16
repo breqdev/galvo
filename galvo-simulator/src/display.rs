@@ -7,7 +7,7 @@ use std::{
 use egui::{Color32, Pos2};
 use iterslide::SlideIterator;
 
-use crate::point::Point;
+use vector_apps::point::Point;
 
 struct TrailPoint {
     pos: Point,
@@ -30,8 +30,8 @@ impl Display {
 
 fn to_screen(pos: Point, center: Pos2, scale: f32) -> Pos2 {
     Pos2 {
-        x: center.x + pos.x * scale,
-        y: center.y + pos.y * scale,
+        x: center.x + (pos.x as f32 - 128.0) / 255.0 * scale,
+        y: center.y + (pos.y as f32 - 128.0) / 255.0 * scale,
     }
 }
 
@@ -63,7 +63,7 @@ impl eframe::App for Display {
             ui.painter().rect_filled(rect, 0.0, Color32::BLACK);
 
             let center = rect.center();
-            let scale = rect.width().min(rect.height()) * 0.45;
+            let scale = rect.width().min(rect.height());
 
             let painter = ui.painter();
 
@@ -74,7 +74,7 @@ impl eframe::App for Display {
 
                 let alpha = ((1.0 - (age.as_secs_f32() / 0.1)) * 255.0) as u8;
 
-                let color = if a.pos.pen {
+                let color = if a.pos.color > 0 {
                     Color32::from_rgba_unmultiplied(255, 0, 0, alpha)
                 } else {
                     Color32::from_rgba_unmultiplied(127, 127, 127, alpha / 2)

@@ -1,7 +1,11 @@
-use crate::point::{COLOR_RED, Point};
+use crate::{
+    point::{Path, Point},
+    utils::text::text_to_path,
+};
 use alloc::vec::Vec;
+use hershey_text::fonts;
 
-use crate::demos::Demo;
+use crate::apps::VectorApp;
 
 const VERTS: [[f32; 3]; 8] = [
     [-0.5, -0.5, -0.5],
@@ -113,20 +117,49 @@ fn map_to_dac(v: f32) -> u8 {
         }
     } */
 
-pub struct CubeDemo {}
+pub struct CubeDemo {
+    points: Vec<Point>,
+    static_points: Vec<Point>,
+}
 
 impl CubeDemo {
     pub fn new() -> Self {
-        Self {}
+        let mut static_points = Vec::new();
+
+        static_points.append(&mut text_to_path(
+            "Hello",
+            0,
+            16,
+            1.0,
+            1.0,
+            1,
+            fonts::ROMANS,
+        ));
+        static_points.append(&mut text_to_path(
+            "World",
+            176,
+            240,
+            1.0,
+            1.0,
+            1,
+            fonts::ROMANS,
+        ));
+
+        Self {
+            points: Vec::new(),
+            static_points,
+        }
     }
 }
 
-impl Demo for CubeDemo {
-    fn get_path(&self, frame: u64) -> Vec<Point> {
+impl VectorApp for CubeDemo {
+    fn get_path(&mut self, frame: u64) -> Path {
+        let color = 1;
+
         let angle_x = frame as f32 * 0.02;
         let angle_y = frame as f32 * 0.03;
 
-        let mut points = Vec::new();
+        self.points.clear();
 
         for [i0, i1] in EDGES {
             let v0 = VERTS[i0];
@@ -160,7 +193,7 @@ impl Demo for CubeDemo {
             let px1 = map_to_dac(x1r * scale1);
             let py1 = map_to_dac(y1r * scale1);
 
-            points.push(Point {
+            self.points.push(Point {
                 x: px0,
                 y: py0,
                 color: 0,
@@ -176,22 +209,26 @@ impl Demo for CubeDemo {
                 let xi = px0 as f32 + t * (px1 as f32 - px0 as f32);
                 let yi = py0 as f32 + t * (py1 as f32 - py0 as f32);
 
-                points.push(Point {
+                self.points.push(Point {
                     x: xi as u8,
                     y: yi as u8,
-                    color: COLOR_RED,
+                    color,
                     delay: 50,
                 });
             }
 
-            points.push(Point {
+            self.points.push(Point {
                 x: px1,
                 y: py1,
-                color: COLOR_RED,
+                color,
                 delay: 100,
             });
         }
 
-        points
+        self.points.extend(&self.static_points);
+
+        Path {
+            points: self.points.clone(),
+        }
     }
 }

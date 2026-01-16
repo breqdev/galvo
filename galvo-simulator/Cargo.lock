@@ -1156,8 +1156,8 @@ version = "0.1.0"
 dependencies = [
  "eframe",
  "egui",
- "hershey-text",
  "iterslide",
+ "vector-apps",
 ]
 
 [[package]]
@@ -2906,6 +2906,14 @@ dependencies = [
  "js-sys",
  "serde_core",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "vector-apps"
+version = "0.1.0"
+dependencies = [
+ "hershey-text",
+ "libm",
 ]
 
 [[package]]

@@ -1,4 +1,4 @@
-use crate::point::{COLOR_RED, Point};
+use crate::point::Point;
 use hershey_text::{HersheyRenderer, load_mapping};
 
 use alloc::vec::Vec;
@@ -13,6 +13,7 @@ pub fn text_to_path(
     y: u8,
     x_scale: f32,
     y_scale: f32,
+    color: u8,
     font: &'static str,
 ) -> Vec<Point> {
     let renderer = HersheyRenderer::new();
@@ -26,7 +27,7 @@ pub fn text_to_path(
         points.push(Point {
             x: map_to_dac((first.x as f32 * x_scale) + x as f32),
             y: map_to_dac((first.y as f32 * y_scale) + y as f32),
-            color: if first.pen { COLOR_RED } else { 0 },
+            color: if first.pen { color } else { 0 },
             delay: 500,
         });
     }
@@ -44,7 +45,7 @@ pub fn text_to_path(
         points.push(Point {
             x: map_to_dac((to.x as f32 * x_scale) + x as f32),
             y: map_to_dac((to.y as f32 * y_scale) + y as f32),
-            color: if to.pen { COLOR_RED } else { 0 },
+            color: if to.pen { color } else { 0 },
             delay: ((distance * 15.0) - 2.0).clamp(0.0, 500.0) as u16 + extra_time,
             // delay: (distance * 15.0) as u16 + extra_time,
         });

@@ -1,0 +1,13 @@
+use alloc::vec::Vec;
+
+#[derive(Clone, Copy)]
+pub struct Point {
+    pub x: u8,
+    pub y: u8,
+    pub color: u8,
+    pub delay: u16,
+}
+
+pub struct Path {
+    pub points: Vec<Point>,
+}

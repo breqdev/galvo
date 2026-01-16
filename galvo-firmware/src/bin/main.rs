@@ -13,10 +13,10 @@ use esp_hal::clock::CpuClock;
 use esp_hal::delay::Delay;
 use esp_hal::otg_fs::{Usb, UsbBus};
 use esp_hal::timer::timg::TimerGroup;
-use galvo_driver::demos;
 use galvo_driver::protocol::{Command, Response};
 use usb_device::prelude::{UsbDeviceBuilder, UsbVidPid};
 use usbd_serial::{SerialPort, USB_CLASS_CDC};
+use vector_apps::apps;
 
 use log::info;
 
@@ -81,8 +81,8 @@ async fn main(spawner: Spawner) -> ! {
     let mut serial_buffer: [u8; 2048] = [0; 2048];
     let mut serial_rx_length: usize = 0;
 
-    let mut active_demo: Box<dyn demos::Demo> = Box::new(demos::alphabet::AlphabetDemo::new());
-    // let mut active_demo: Box<dyn demos::Demo> = Box::new(demos::cube::CubeDemo::new());
+    // let mut active_demo: Box<dyn apps::VectorApp> = Box::new(apps::alphabet::AlphabetDemo::new());
+    let mut active_demo: Box<dyn apps::VectorApp> = Box::new(apps::cube::CubeDemo::new());
 
     let mut frameno: u64 = 0;
 
@@ -112,10 +112,6 @@ async fn main(spawner: Spawner) -> ! {
                                     Command::SetIndicatorLight { r, g, b } => {
                                         indicator.set_color(smart_leds::RGB { r, g, b });
                                     }
-                                    Command::SetWaveform { points } => {
-                                        // TODO
-                                        // active_path = points;
-                                    }
                                 }
 
                                 let result = Response { success: true };
@@ -136,7 +132,7 @@ async fn main(spawner: Spawner) -> ! {
 
         frameno += 1;
 
-        for p in active_demo.get_path(frameno) {
+        for p in active_demo.get_path(frameno).points {
             // Output coordinates
             lasers.display(&p);
 

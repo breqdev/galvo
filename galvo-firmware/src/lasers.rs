@@ -2,7 +2,7 @@ use esp_hal::analog::dac::Dac;
 use esp_hal::gpio::{Level, Output, OutputConfig, OutputPin};
 use esp_hal::peripherals::{DAC1, DAC2, GPIO17, GPIO18};
 
-use crate::point::{COLOR_BLUE, COLOR_GREEN, COLOR_RED, Point};
+use vector_apps::point::Point;
 
 pub struct Lasers<'a> {
     red: Output<'a>,
@@ -35,19 +35,19 @@ impl<'a> Lasers<'a> {
         self.x.write(255 - p.x);
         self.y.write(255 - p.y);
 
-        if (p.color & COLOR_RED) != 0 {
+        if (p.color & 0b001) != 0 {
             self.red.set_high();
         } else {
             self.red.set_low();
         }
 
-        if (p.color & COLOR_GREEN) != 0 {
+        if (p.color & 0b010) != 0 {
             self.green.set_high();
         } else {
             self.green.set_low();
         }
 
-        if (p.color & COLOR_BLUE) != 0 {
+        if (p.color & 0b100) != 0 {
             self.blue.set_high();
         } else {
             self.blue.set_low();

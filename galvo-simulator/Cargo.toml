@@ -7,4 +7,4 @@ edition = "2024"
 eframe = "0.33.3"
 egui = "0.33.3"
 iterslide = "1.0.1"
-hershey-text ={ path = "../hershey-text" }
+vector-apps ={ path = "../vector-apps" }
