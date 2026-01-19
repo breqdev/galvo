@@ -1,13 +1,14 @@
 use std::{sync::mpsc::Sender, thread, time::Duration};
 
 use vector_apps::{
-    apps::{VectorApp, alphabet::AlphabetDemo, asteroids::Asteroids, cube::CubeDemo},
+    apps::{VectorApp, alphabet::AlphabetDemo, asteroids::Asteroids, cube::CubeDemo, maps::Maps},
     point::Point,
 };
 
 pub fn painter(tx: Sender<Point>) {
     // let mut app: Box<dyn VectorApp> = Box::new(CubeDemo::new());
-    let mut app: Box<dyn VectorApp> = Box::new(Asteroids::new());
+    // let mut app: Box<dyn VectorApp> = Box::new(Asteroids::new());
+    let mut app: Box<dyn VectorApp> = Box::new(Maps::new());
     // let mut app: Box<dyn VectorApp> = Box::new(AlphabetDemo::new());
 
     let mut frame = 0;
