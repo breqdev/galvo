@@ -1,6 +1,7 @@
 use crate::point::Path;
 
 pub mod alphabet;
+pub mod asteroids;
 pub mod cube;
 
 pub trait VectorApp {
