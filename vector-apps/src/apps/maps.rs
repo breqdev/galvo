@@ -21,12 +21,17 @@ impl Maps {
         let data = include_str!("roads.txt");
 
         let mut first_point = true;
+        let mut prev: Option<(u8, u8)> = None;
+
+        // Max step distance for interpolation (DAC units)
+        const STEP: f32 = 2.0;
 
         for line in data.lines() {
             let line = line.trim();
             if line.is_empty() {
-                // optional: insert pen-up / pause if needed
+                // New polyline: insert pen-up or pause if needed
                 first_point = true;
+                prev = None;
                 continue;
             }
 
@@ -38,21 +43,59 @@ impl Maps {
             let x = libm::roundf((x_norm + 1.0) * 0.5 * 255.0) as u8;
             let y = libm::roundf((y_norm * -1.0 + 1.0) * 0.5 * 255.0) as u8;
 
-            let point = Point {
+            if first_point || prev.is_none() {
+                // First point of a polyline
+                path.push(Point {
+                    x,
+                    y,
+                    color: 0,
+                    delay: 500,
+                });
+                path.push(Point {
+                    x,
+                    y,
+                    color: 1,
+                    delay: 50,
+                });
+                prev = Some((x, y));
+                first_point = false;
+                continue;
+            }
+
+            // Interpolate between prev and current
+            let (px, py) = prev.unwrap();
+            let dx = x as f32 - px as f32;
+            let dy = y as f32 - py as f32;
+            let distance = libm::sqrtf(dx * dx + dy * dy);
+            let steps = libm::ceilf(distance / STEP) as u16;
+
+            for i in 1..=steps {
+                let t = i as f32 / steps as f32;
+                let ix = libm::roundf(px as f32 + dx * t) as u8;
+                let iy = libm::roundf(py as f32 + dy * t) as u8;
+
+                path.push(Point {
+                    x: ix,
+                    y: iy,
+                    color: 1,
+                    delay: 20, // small delay between interpolated points
+                });
+            }
+
+            // settle at the last position a little longer
+            path.push(Point {
                 x,
                 y,
-                color: if first_point { 0 } else { 1 },
-                delay: if first_point { 200 } else { 10 }, // longer for first point of polyline
-            };
+                color: 1,
+                delay: 200,
+            });
 
-            path.push(point);
-            first_point = false;
+            prev = Some((x, y));
         }
 
         Self { path }
     }
 }
-
 impl VectorApp for Maps {
     fn get_path(&mut self, _frame: u64) -> &Path {
         &self.path

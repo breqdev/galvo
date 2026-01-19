@@ -83,7 +83,8 @@ async fn main(spawner: Spawner) -> ! {
 
     // let mut active_demo: Box<dyn apps::VectorApp> = Box::new(apps::alphabet::AlphabetDemo::new());
     // let mut active_demo: Box<dyn apps::VectorApp> = Box::new(apps::cube::CubeDemo::new());
-    let mut active_demo: Box<dyn apps::VectorApp> = Box::new(apps::asteroids::Asteroids::new());
+    // let mut active_demo: Box<dyn apps::VectorApp> = Box::new(apps::asteroids::Asteroids::new());
+    let mut active_demo: Box<dyn apps::VectorApp> = Box::new(apps::maps::Maps::new());
 
     let mut frameno: u64 = 0;
 
