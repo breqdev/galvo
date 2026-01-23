@@ -6,34 +6,18 @@ OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 
 
 def meters_to_degrees(lat, meters):
-    """
-    Convert meters to degrees latitude/longitude at a given latitude.
-    """
     lat_rad = math.radians(lat)
-
     meters_per_deg_lat = 111_320
     meters_per_deg_lon = 111_320 * math.cos(lat_rad)
-
-    return (
-        meters / meters_per_deg_lat,
-        meters / meters_per_deg_lon,
-    )
+    return meters / meters_per_deg_lat, meters / meters_per_deg_lon
 
 
 def fetch_osm_roads(lat, lon, side_meters):
-    """
-    Fetch OSM road geometry in a square area centered on lat/lon.
-
-    Returns:
-        List[List[(lon, lat)]]
-    """
     half = side_meters / 2
     dlat, dlon = meters_to_degrees(lat, half)
 
-    south = lat - dlat
-    north = lat + dlat
-    west = lon - dlon
-    east = lon + dlon
+    south, north = lat - dlat, lat + dlat
+    west, east = lon - dlon, lon + dlon
 
     query = f"""
     [out:json][timeout:25];
@@ -48,85 +32,135 @@ def fetch_osm_roads(lat, lon, side_meters):
     data = response.json()
 
     polylines = []
-
     for element in data["elements"]:
-        if element["type"] != "way":
+        if element["type"] != "way" or "geometry" not in element:
             continue
-
-        if "geometry" not in element:
-            continue
-
         line = [(pt["lon"], pt["lat"]) for pt in element["geometry"]]
-
         if len(line) >= 2:
             polylines.append(line)
-
     return polylines
 
 
-def project_crop_and_normalize(polylines, lat0, lon0, side_meters):
-    """
-    Project lat/lon to local meters, clip to a square, and normalize to [-1,+1].
-    Uses Shapely for robust clipping.
-    """
+def project_crop(polylines, lat0, lon0, side_meters):
     lat0_rad = math.radians(lat0)
     half_side = side_meters / 2
-
-    # Crop square in local meters
     crop_rect = box(-half_side, -half_side, half_side, half_side)
 
-    normalized = []
+    clipped = []
 
     for line in polylines:
         if len(line) < 2:
             continue
-
-        # Project lon/lat -> local meters
         projected = [
             ((lon - lon0) * math.cos(lat0_rad) * 111_320, (lat - lat0) * 111_320)
             for lon, lat in line
         ]
-
         shapely_line = LineString(projected)
-        clipped = shapely_line.intersection(crop_rect)
+        intersection = shapely_line.intersection(crop_rect)
 
-        # clipped can be LineString or MultiLineString
-        if clipped.is_empty:
+        if intersection.is_empty:
             continue
-        if clipped.geom_type == "LineString":
-            coords = list(clipped.coords)
-            normalized.append([(x / half_side, y / half_side) for x, y in coords])
-        elif clipped.geom_type == "MultiLineString":
-            for subline in clipped.geoms:
-                coords = list(subline.coords)
-                if len(coords) >= 2:
-                    normalized.append(
-                        [(x / half_side, y / half_side) for x, y in coords]
-                    )
+        if intersection.geom_type == "LineString":
+            clipped.append(list(intersection.coords))
+        elif intersection.geom_type == "MultiLineString":
+            for subline in intersection.geoms:
+                if len(subline.coords) >= 2:
+                    clipped.append(list(subline.coords))
+    return clipped
 
+
+def merge_connected_lines(lines, tol=1e-3):
+    """
+    Merge lines with matching endpoints within tolerance.
+    """
+    merged = []
+
+    while lines:
+        line = lines.pop(0)
+        changed = True
+        while changed:
+            changed = False
+            for i, other in enumerate(lines):
+                if math.dist(line[-1], other[0]) < tol:
+                    line.extend(other[1:])
+                    lines.pop(i)
+                    changed = True
+                    break
+                elif math.dist(line[-1], other[-1]) < tol:
+                    line.extend(reversed(other[:-1]))
+                    lines.pop(i)
+                    changed = True
+                    break
+                elif math.dist(line[0], other[-1]) < tol:
+                    line = other[:-1] + line
+                    lines.pop(i)
+                    changed = True
+                    break
+                elif math.dist(line[0], other[0]) < tol:
+                    line = list(reversed(other[1:])) + line
+                    lines.pop(i)
+                    changed = True
+                    break
+        merged.append(line)
+    return merged
+
+
+def greedy_order_lines(lines):
+    """
+    Reorder lines to reduce travel distance between disconnected segments.
+    """
+    if not lines:
+        return []
+
+    ordered = [lines.pop(0)]
+
+    while lines:
+        last_point = ordered[-1][-1]
+        best_idx = None
+        best_dist = float("inf")
+        reverse = False
+
+        for i, line in enumerate(lines):
+            dist_start = math.dist(last_point, line[0])
+            dist_end = math.dist(last_point, line[-1])
+
+            if dist_start < best_dist:
+                best_dist, best_idx, reverse = dist_start, i, False
+            if dist_end < best_dist:
+                best_dist, best_idx, reverse = dist_end, i, True
+
+        next_line = lines.pop(best_idx)
+        if reverse:
+            next_line.reverse()
+        ordered.append(next_line)
+
+    return ordered
+
+
+def normalize_lines(lines, side_meters):
+    half_side = side_meters / 2
+    normalized = [[(x / half_side, y / half_side) for x, y in line] for line in lines]
     return normalized
 
 
 def save_polylines_txt(filename, polylines):
-    """
-    Save polylines to a simple text file.
-    Each line: x y
-    Empty line between polylines
-    """
     with open(filename, "w") as f:
         for line in polylines:
             for x, y in line:
                 f.write(f"{x:.6f} {y:.6f}\n")
-            f.write("\n")  # blank line = pen-up / new polyline
+            f.write("\n")
 
 
 if __name__ == "__main__":
     lat = 42.39625701047068
     lon = -71.10866957285928
-    side_meters = 1000
+    side_meters = 600
 
     roads = fetch_osm_roads(lat, lon, side_meters)
-    norm_roads = project_crop_and_normalize(roads, lat, lon, side_meters)
+    clipped = project_crop(roads, lat, lon, side_meters)
+    merged = merge_connected_lines(clipped)
+    ordered = greedy_order_lines(merged)
+    norm_roads = normalize_lines(ordered, side_meters)
 
     save_polylines_txt("roads.txt", norm_roads)
     print(f"Saved {len(norm_roads)} polylines to roads.txt")

@@ -24,7 +24,7 @@ impl Maps {
         let mut prev: Option<(u8, u8)> = None;
 
         // Max step distance for interpolation (DAC units)
-        const STEP: f32 = 2.0;
+        const STEP: f32 = 1.0;
 
         for line in data.lines() {
             let line = line.trim();
@@ -43,19 +43,32 @@ impl Maps {
             let x = libm::roundf((x_norm + 1.0) * 0.5 * 255.0) as u8;
             let y = libm::roundf((y_norm * -1.0 + 1.0) * 0.5 * 255.0) as u8;
 
-            if first_point || prev.is_none() {
+            if first_point {
                 // First point of a polyline
+                let delay = match prev {
+                    Some((px, py)) => {
+                        let dx = x as f32 - px as f32;
+                        let dy = y as f32 - py as f32;
+                        let distance = libm::sqrtf(dx * dx + dy * dy);
+
+                        (distance * 1.0) as u16
+                    }
+                    None => {
+                        1000 // should be enough
+                    }
+                };
+
                 path.push(Point {
                     x,
                     y,
                     color: 0,
-                    delay: 500,
+                    delay,
                 });
                 path.push(Point {
                     x,
                     y,
                     color: 1,
-                    delay: 50,
+                    delay: 1,
                 });
                 prev = Some((x, y));
                 first_point = false;
@@ -78,7 +91,7 @@ impl Maps {
                     x: ix,
                     y: iy,
                     color: 1,
-                    delay: 20, // small delay between interpolated points
+                    delay: 1, // small delay between interpolated points
                 });
             }
 
@@ -87,7 +100,7 @@ impl Maps {
                 x,
                 y,
                 color: 1,
-                delay: 200,
+                delay: 100,
             });
 
             prev = Some((x, y));

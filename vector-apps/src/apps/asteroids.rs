@@ -217,7 +217,7 @@ impl Asteroids {
                 y: center.y + r * libm::sinf(a),
             };
 
-            if let Some(last) = prev {
+            if let Some(_last) = prev {
                 self.path.push(Point {
                     x: to_u8(p.x),
                     y: to_u8(p.y),

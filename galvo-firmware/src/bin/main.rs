@@ -136,7 +136,7 @@ async fn main(spawner: Spawner) -> ! {
 
         for p in active_demo.get_path(frameno) {
             // Output coordinates
-            lasers.display(&p);
+            lasers.display(p);
 
             // DAC/galvo settling time
             delay.delay_micros(p.delay as u32);
