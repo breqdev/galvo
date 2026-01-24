@@ -3,12 +3,249 @@ use alloc::vec::Vec;
 use crate::{
     apps::VectorApp,
     point::{Path, Point},
+    utils::math::Vec2,
 };
 
-/// The `RoadsVectorApp` struct loads a text file of normalized polylines
-/// (one line per point: x y in [-1,1], empty line = pen-up / new polyline),
-/// scales to u8 DAC coordinates (0..255),
-/// and precomputes a flat Path.
+#[derive(Clone, Copy, Debug)]
+pub struct LatLon {
+    pub lon: f32,
+    pub lat: f32,
+}
+
+pub type Polyline<T> = Vec<T>;
+pub type Polylines<T> = Vec<Polyline<T>>;
+
+pub fn parse_latlon_file(data: &str) -> Polylines<LatLon> {
+    let mut lines = Vec::new();
+    let mut current = Vec::new();
+
+    for line in data.lines() {
+        let line = line.trim();
+        if line.is_empty() {
+            if current.len() >= 2 {
+                lines.push(current);
+            }
+            current = Vec::new();
+            continue;
+        }
+
+        let mut it = line.split_whitespace();
+        let lon: f32 = it.next().unwrap().parse().unwrap();
+        let lat: f32 = it.next().unwrap().parse().unwrap();
+
+        current.push(LatLon { lon, lat });
+    }
+
+    if current.len() >= 2 {
+        lines.push(current);
+    }
+
+    lines
+}
+
+const METERS_PER_DEG: f32 = 111_320.0;
+
+fn project(ll: LatLon, lat0: f32, lon0: f32, cos_lat0: f32) -> Vec2 {
+    Vec2 {
+        x: (ll.lon - lon0) * cos_lat0 * METERS_PER_DEG,
+        y: (ll.lat - lat0) * METERS_PER_DEG,
+    }
+}
+
+fn clip_segment(a: Vec2, b: Vec2, half: f32) -> Option<(Vec2, Vec2)> {
+    let dx = b.x - a.x;
+    let dy = b.y - a.y;
+
+    let mut t0 = 0.0;
+    let mut t1 = 1.0;
+
+    let checks = [
+        (-dx, a.x + half),
+        (dx, half - a.x),
+        (-dy, a.y + half),
+        (dy, half - a.y),
+    ];
+
+    for (p, q) in checks {
+        if p == 0.0 {
+            if q < 0.0 {
+                return None;
+            }
+        } else {
+            let r = q / p;
+            if p < 0.0 {
+                if r > t1 {
+                    return None;
+                }
+                if r > t0 {
+                    t0 = r;
+                }
+            } else {
+                if r < t0 {
+                    return None;
+                }
+                if r < t1 {
+                    t1 = r;
+                }
+            }
+        }
+    }
+
+    Some((
+        Vec2 {
+            x: a.x + t0 * dx,
+            y: a.y + t0 * dy,
+        },
+        Vec2 {
+            x: a.x + t1 * dx,
+            y: a.y + t1 * dy,
+        },
+    ))
+}
+
+fn project_and_crop(
+    input: &Polylines<LatLon>,
+    lat0: f32,
+    lon0: f32,
+    side_m: f32,
+) -> Polylines<Vec2> {
+    let half = side_m * 0.5;
+    let cos_lat0 = libm::cosf(lat0.to_radians());
+
+    let mut out = Vec::new();
+
+    for line in input {
+        let mut current = Vec::new();
+
+        for seg in line.windows(2) {
+            let a = project(seg[0], lat0, lon0, cos_lat0);
+            let b = project(seg[1], lat0, lon0, cos_lat0);
+
+            if let Some((ca, cb)) = clip_segment(a, b, half) {
+                if current.is_empty() {
+                    current.push(ca);
+                }
+                current.push(cb);
+            } else if current.len() >= 2 {
+                out.push(current);
+                current = Vec::new();
+            }
+        }
+
+        if current.len() >= 2 {
+            out.push(current);
+        }
+    }
+
+    out
+}
+
+fn merge_connected_lines(mut lines: Polylines<Vec2>, tol: f32) -> Polylines<Vec2> {
+    let tol2 = tol * tol;
+    let mut merged = Vec::new();
+
+    while let Some(mut line) = lines.pop() {
+        let mut changed = true;
+
+        while changed {
+            changed = false;
+
+            let mut i = 0;
+            while i < lines.len() {
+                let other = &lines[i];
+
+                let (a0, a1) = (line[0], *line.last().unwrap());
+                let (b0, b1) = (other[0], *other.last().unwrap());
+
+                let matched = if a1.distance(b0) < tol2 {
+                    line.extend_from_slice(&other[1..]);
+                    true
+                } else if a1.distance(b1) < tol2 {
+                    for p in other[..other.len() - 1].iter().rev() {
+                        line.push(*p);
+                    }
+                    true
+                } else if a0.distance(b1) < tol2 {
+                    let mut new = other[..other.len() - 1].to_vec();
+                    new.extend(line);
+                    line = new;
+                    true
+                } else if a0.distance(b0) < tol2 {
+                    let mut new = other[1..].iter().rev().cloned().collect::<Vec<_>>();
+                    new.extend(line);
+                    line = new;
+                    true
+                } else {
+                    false
+                };
+
+                if matched {
+                    lines.swap_remove(i);
+                    changed = true;
+                    break;
+                } else {
+                    i += 1;
+                }
+            }
+        }
+
+        merged.push(line);
+    }
+
+    merged
+}
+
+fn greedy_order_lines(mut lines: Polylines<Vec2>) -> Polylines<Vec2> {
+    if lines.is_empty() {
+        return lines;
+    }
+
+    let mut ordered = Vec::new();
+    ordered.push(lines.pop().unwrap());
+
+    while !lines.is_empty() {
+        let last = *ordered.last().unwrap().last().unwrap();
+
+        let mut best_i = 0;
+        let mut best_d = f32::MAX;
+        let mut reverse = false;
+
+        for (i, line) in lines.iter().enumerate() {
+            let d0 = last.distance(line[0]);
+            let d1 = last.distance(*line.last().unwrap());
+
+            if d0 < best_d {
+                best_d = d0;
+                best_i = i;
+                reverse = false;
+            }
+            if d1 < best_d {
+                best_d = d1;
+                best_i = i;
+                reverse = true;
+            }
+        }
+
+        let mut next = lines.swap_remove(best_i);
+        if reverse {
+            next.reverse();
+        }
+        ordered.push(next);
+    }
+
+    ordered
+}
+
+fn normalize(lines: &mut Polylines<Vec2>, side_m: f32) {
+    let half = side_m * 0.5;
+    for line in lines {
+        for p in line {
+            p.x /= half;
+            p.y /= half;
+        }
+    }
+}
+
 pub struct Maps {
     path: Path,
 }
@@ -17,93 +254,94 @@ impl Maps {
     pub fn new() -> Self {
         let mut path: Path = Vec::new();
 
-        // Include the file in the binary at compile time
-        let data = include_str!("roads.txt");
+        let raw = include_str!("roads.txt");
+        let latlon = parse_latlon_file(raw);
 
-        let mut first_point = true;
+        let lat0 = 42.39625701047068;
+        let lon0 = -71.10866957285928;
+        let side_meters = 400.0;
+
+        let mut lines = project_and_crop(&latlon, lat0, lon0, side_meters);
+        lines = merge_connected_lines(lines, 0.5); // 0.5m tolerance
+        lines = greedy_order_lines(lines);
+        normalize(&mut lines, side_meters);
+
         let mut prev: Option<(u8, u8)> = None;
 
         // Max step distance for interpolation (DAC units)
         const STEP: f32 = 1.0;
 
-        for line in data.lines() {
-            let line = line.trim();
-            if line.is_empty() {
-                // New polyline: insert pen-up or pause if needed
-                first_point = true;
-                prev = None;
+        for line in &lines {
+            if line.len() < 2 {
                 continue;
             }
 
-            let mut iter = line.split_whitespace();
-            let x_norm: f32 = iter.next().unwrap().parse().unwrap();
-            let y_norm: f32 = iter.next().unwrap().parse().unwrap();
+            for (i, p) in line.iter().enumerate() {
+                // Map normalized [-1,1] → DAC [0,255]
+                let x = libm::roundf((p.x + 1.0) * 0.5 * 255.0) as u8;
+                let y = libm::roundf((-p.y + 1.0) * 0.5 * 255.0) as u8;
 
-            // Map normalized [-1,1] to u8 DAC range 0..255
-            let x = libm::roundf((x_norm + 1.0) * 0.5 * 255.0) as u8;
-            let y = libm::roundf((-y_norm + 1.0) * 0.5 * 255.0) as u8;
+                if i == 0 {
+                    // Move laser (blanked) to start of polyline
+                    let delay = match prev {
+                        Some((px, py)) => {
+                            let dx = x as f32 - px as f32;
+                            let dy = y as f32 - py as f32;
+                            libm::sqrtf(dx * dx + dy * dy) as u16
+                        }
+                        None => 1000,
+                    };
 
-            if first_point {
-                // First point of a polyline
-                let delay = match prev {
-                    Some((px, py)) => {
-                        let dx = x as f32 - px as f32;
-                        let dy = y as f32 - py as f32;
-                        let distance = libm::sqrtf(dx * dx + dy * dy);
+                    // Pen-up move
+                    path.push(Point {
+                        x,
+                        y,
+                        color: (0, 0, 0),
+                        delay,
+                    });
 
-                        (distance * 1.0) as u16
+                    // Turn laser on
+                    path.push(Point {
+                        x,
+                        y,
+                        color: (255, 0, 0),
+                        delay: 1,
+                    });
+
+                    prev = Some((x, y));
+                } else {
+                    // Interpolate from previous point
+                    let (px, py) = prev.unwrap();
+                    let dx = x as f32 - px as f32;
+                    let dy = y as f32 - py as f32;
+                    let distance = libm::sqrtf(dx * dx + dy * dy);
+
+                    let steps = libm::ceilf(distance / STEP) as u16;
+
+                    for i in 1..=steps {
+                        let t = i as f32 / steps as f32;
+                        let ix = libm::roundf(px as f32 + dx * t) as u8;
+                        let iy = libm::roundf(py as f32 + dy * t) as u8;
+
+                        path.push(Point {
+                            x: ix,
+                            y: iy,
+                            color: (255, 0, 0),
+                            delay: 1,
+                        });
                     }
-                    None => {
-                        1000 // should be enough
-                    }
-                };
 
-                path.push(Point {
-                    x,
-                    y,
-                    color: (0, 0, 0),
-                    delay,
-                });
-                path.push(Point {
-                    x,
-                    y,
-                    color: (255, 0, 0),
-                    delay: 1,
-                });
-                prev = Some((x, y));
-                first_point = false;
-                continue;
+                    // Small settle at the vertex
+                    path.push(Point {
+                        x,
+                        y,
+                        color: (255, 0, 0),
+                        delay: 100,
+                    });
+
+                    prev = Some((x, y));
+                }
             }
-
-            // Interpolate between prev and current
-            let (px, py) = prev.unwrap();
-            let dx = x as f32 - px as f32;
-            let dy = y as f32 - py as f32;
-            let distance = libm::sqrtf(dx * dx + dy * dy);
-            let steps = libm::ceilf(distance / STEP) as u16;
-
-            for i in 1..=steps {
-                let t = i as f32 / steps as f32;
-                let ix = libm::roundf(px as f32 + dx * t) as u8;
-                let iy = libm::roundf(py as f32 + dy * t) as u8;
-
-                path.push(Point {
-                    x: ix,
-                    y: iy,
-                    color: (255, 0, 0),
-                    delay: 1, // small delay between interpolated points
-                });
-            }
-
-            // settle at the last position a little longer
-            path.push(Point {
-                x,
-                y,
-                color: (255, 0, 0),
-                delay: 100,
-            });
-
-            prev = Some((x, y));
         }
 
         Self { path }

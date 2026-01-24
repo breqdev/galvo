@@ -154,13 +154,9 @@ def save_polylines_txt(filename, polylines):
 if __name__ == "__main__":
     lat = 42.39625701047068
     lon = -71.10866957285928
-    side_meters = 600
+    side_meters = 1000
 
     roads = fetch_osm_roads(lat, lon, side_meters)
-    clipped = project_crop(roads, lat, lon, side_meters)
-    merged = merge_connected_lines(clipped)
-    ordered = greedy_order_lines(merged)
-    norm_roads = normalize_lines(ordered, side_meters)
 
-    save_polylines_txt("roads.txt", norm_roads)
-    print(f"Saved {len(norm_roads)} polylines to roads.txt")
+    save_polylines_txt("roads.txt", roads)
+    print(f"Saved {len(roads)} polylines to roads.txt")
