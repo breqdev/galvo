@@ -103,33 +103,29 @@ impl Asteroids {
             y: libm::cosf(self.ship.rot),
         };
 
-        self.ship.vel = self
-            .ship
-            .vel
-            .mul(0.9)
-            .add(forward.mul(controls.y as f32 * -0.001));
+        self.ship.vel = (self.ship.vel * 0.9) + (forward * (controls.y as f32 * -0.001));
 
         // rotate ship slowly
-        self.ship.pos = self.ship.pos.add(self.ship.vel).wrap();
+        self.ship.pos = (self.ship.pos + self.ship.vel).wrap();
 
         self.ship.rot += self.ship.rvel;
 
         // drift asteroids
         for a in &mut self.asteroids {
-            a.pos = a.pos.add(a.vel).wrap();
+            a.pos = (a.pos + a.vel).wrap();
         }
 
         if controls.b {
             self.bullets.push(Bullet {
                 pos: self.ship.pos,
-                vel: forward.mul(0.01),
+                vel: forward * 0.01,
                 ttl: 400,
             });
         }
 
         // move bullets
         for b in &mut self.bullets {
-            b.pos = b.pos.add(b.vel).wrap();
+            b.pos = (b.pos + b.vel).wrap();
             b.ttl -= 1;
         }
 
@@ -222,9 +218,9 @@ impl Asteroids {
             y: libm::cosf(self.ship.rot - 2.5),
         };
 
-        let p0 = self.ship.pos.add(forward.mul(0.03));
-        let p1 = self.ship.pos.add(left.mul(0.02));
-        let p2 = self.ship.pos.add(right.mul(0.02));
+        let p0 = self.ship.pos + (forward * (0.03));
+        let p1 = self.ship.pos + (left * (0.02));
+        let p2 = self.ship.pos + (right * (0.02));
 
         self.path.push(Point {
             x: to_u8(p0.x),

@@ -1,3 +1,5 @@
+use core::ops::{Add, Mul};
+
 #[derive(Clone, Copy)]
 pub struct Vec2 {
     pub x: f32,
@@ -5,20 +7,6 @@ pub struct Vec2 {
 }
 
 impl Vec2 {
-    pub fn add(self, o: Vec2) -> Vec2 {
-        Vec2 {
-            x: self.x + o.x,
-            y: self.y + o.y,
-        }
-    }
-
-    pub fn mul(self, s: f32) -> Vec2 {
-        Vec2 {
-            x: self.x * s,
-            y: self.y * s,
-        }
-    }
-
     pub fn wrap(self) -> Vec2 {
         Vec2 {
             x: wrap(self.x),
@@ -30,6 +18,28 @@ impl Vec2 {
         let dx = self.x - other.x;
         let dy = self.y - other.y;
         dx * dx + dy * dy
+    }
+}
+
+impl Add for Vec2 {
+    type Output = Self;
+
+    fn add(self, o: Vec2) -> Vec2 {
+        Vec2 {
+            x: self.x + o.x,
+            y: self.y + o.y,
+        }
+    }
+}
+
+impl Mul<f32> for Vec2 {
+    type Output = Self;
+
+    fn mul(self, s: f32) -> Vec2 {
+        Vec2 {
+            x: self.x * s,
+            y: self.y * s,
+        }
     }
 }
 
