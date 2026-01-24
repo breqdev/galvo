@@ -5,45 +5,8 @@ use alloc::vec::Vec;
 use crate::{
     apps::{Controls, VectorApp},
     point::{Path, Point},
+    utils::math::Vec2,
 };
-
-#[derive(Clone, Copy)]
-struct Vec2 {
-    x: f32,
-    y: f32,
-}
-
-impl Vec2 {
-    fn add(self, o: Vec2) -> Vec2 {
-        Vec2 {
-            x: self.x + o.x,
-            y: self.y + o.y,
-        }
-    }
-
-    fn mul(self, s: f32) -> Vec2 {
-        Vec2 {
-            x: self.x * s,
-            y: self.y * s,
-        }
-    }
-}
-
-fn dist2(a: Vec2, b: Vec2) -> f32 {
-    let dx = a.x - b.x;
-    let dy = a.y - b.y;
-    dx * dx + dy * dy
-}
-
-fn wrap(v: f32) -> f32 {
-    if v < 0.0 {
-        v + 1.0
-    } else if v > 1.0 {
-        v - 1.0
-    } else {
-        v
-    }
-}
 
 struct Ship {
     pos: Vec2,
@@ -98,7 +61,7 @@ pub struct Asteroids {
 
 impl Asteroids {
     pub fn new() -> Self {
-        let mut asteroids = Vec::new();
+        let mut asteroids = Vec::with_capacity(2);
 
         asteroids.push(Asteroid {
             pos: Vec2 { x: 0.2, y: 0.3 },
@@ -147,17 +110,13 @@ impl Asteroids {
             .add(forward.mul(controls.y as f32 * -0.001));
 
         // rotate ship slowly
-        self.ship.pos = self.ship.pos.add(self.ship.vel);
-        self.ship.pos.x = wrap(self.ship.pos.x);
-        self.ship.pos.y = wrap(self.ship.pos.y);
+        self.ship.pos = self.ship.pos.add(self.ship.vel).wrap();
 
         self.ship.rot += self.ship.rvel;
 
         // drift asteroids
         for a in &mut self.asteroids {
-            a.pos = a.pos.add(a.vel);
-            a.pos.x = wrap(a.pos.x);
-            a.pos.y = wrap(a.pos.y);
+            a.pos = a.pos.add(a.vel).wrap();
         }
 
         if controls.b {
@@ -170,9 +129,7 @@ impl Asteroids {
 
         // move bullets
         for b in &mut self.bullets {
-            b.pos = b.pos.add(b.vel);
-            b.pos.x = wrap(b.pos.x);
-            b.pos.y = wrap(b.pos.y);
+            b.pos = b.pos.add(b.vel).wrap();
             b.ttl -= 1;
         }
 
@@ -187,7 +144,7 @@ impl Asteroids {
 
             self.bullets.retain(|b| {
                 let r = a.size.radius();
-                if dist2(a.pos, b.pos) < r * r {
+                if a.pos.distance(b.pos) < r * r {
                     hit = true;
                     false // remove bullet
                 } else {

@@ -41,7 +41,7 @@ impl Maps {
 
             // Map normalized [-1,1] to u8 DAC range 0..255
             let x = libm::roundf((x_norm + 1.0) * 0.5 * 255.0) as u8;
-            let y = libm::roundf((y_norm * -1.0 + 1.0) * 0.5 * 255.0) as u8;
+            let y = libm::roundf((-y_norm + 1.0) * 0.5 * 255.0) as u8;
 
             if first_point {
                 // First point of a polyline
