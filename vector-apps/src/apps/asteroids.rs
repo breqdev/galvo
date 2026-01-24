@@ -3,7 +3,7 @@ use core::f32::consts::TAU;
 use alloc::vec::Vec;
 
 use crate::{
-    apps::VectorApp,
+    apps::{Controls, VectorApp},
     point::{Path, Point},
 };
 
@@ -47,7 +47,9 @@ fn wrap(v: f32) -> f32 {
 
 struct Ship {
     pos: Vec2,
+    vel: Vec2,
     rot: f32,
+    rvel: f32,
 }
 
 struct Bullet {
@@ -104,7 +106,6 @@ impl Asteroids {
                 x: 0.0007,
                 y: 0.0003,
             },
-            // vel: Vec2 { x: 0.0, y: 0.0 },
             size: AsteroidSize::Large,
         });
 
@@ -114,14 +115,15 @@ impl Asteroids {
                 x: -0.0004,
                 y: 0.0006,
             },
-            // vel: Vec2 { x: 0.0, y: 0.0 },
             size: AsteroidSize::Medium,
         });
 
         Self {
             ship: Ship {
                 pos: Vec2 { x: 0.5, y: 0.5 },
+                vel: Vec2 { x: 0.0, y: 0.0 },
                 rot: 0.0,
+                rvel: 0.0,
             },
             asteroids,
             bullets: Vec::new(),
@@ -129,9 +131,27 @@ impl Asteroids {
         }
     }
 
-    fn step(&mut self) {
+    fn step(&mut self, controls: Controls) {
+        // handle controls
+        self.ship.rvel += controls.x as f32 * -0.002;
+
+        let forward = Vec2 {
+            x: libm::sinf(self.ship.rot),
+            y: libm::cosf(self.ship.rot),
+        };
+
+        self.ship.vel = self
+            .ship
+            .vel
+            .mul(0.9)
+            .add(forward.mul(controls.y as f32 * -0.001));
+
         // rotate ship slowly
-        self.ship.rot += 0.002;
+        self.ship.pos = self.ship.pos.add(self.ship.vel);
+        self.ship.pos.x = wrap(self.ship.pos.x);
+        self.ship.pos.y = wrap(self.ship.pos.y);
+
+        self.ship.rot += self.ship.rvel;
 
         // drift asteroids
         for a in &mut self.asteroids {
@@ -140,14 +160,7 @@ impl Asteroids {
             a.pos.y = wrap(a.pos.y);
         }
 
-        // TODO: actually shoot bullets when controlled
-        // rn its just arbitrary
-        if self.bullets.len() < 1 {
-            let forward = Vec2 {
-                x: libm::sinf(self.ship.rot),
-                y: libm::cosf(self.ship.rot),
-            };
-
+        if controls.b {
             self.bullets.push(Bullet {
                 pos: self.ship.pos,
                 vel: forward.mul(0.01),
@@ -332,8 +345,11 @@ impl Asteroids {
 
 impl VectorApp for Asteroids {
     fn get_path(&mut self, _frame: u64) -> &Path {
-        self.step();
         self.render();
         &self.path
+    }
+
+    fn handle_controls(&mut self, controls: Controls) {
+        self.step(controls);
     }
 }
