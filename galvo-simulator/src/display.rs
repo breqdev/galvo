@@ -50,7 +50,7 @@ impl eframe::App for Display {
 
         loop {
             match self.trail.back() {
-                Some(point) if point.ts < now - Duration::from_millis(100) => {
+                Some(point) if point.ts < now - Duration::from_millis(200) => {
                     self.trail.pop_back().unwrap();
                 }
                 _ => break,
@@ -118,13 +118,16 @@ impl eframe::App for Display {
                     alpha,
                 );
 
-                painter.line_segment(
-                    [
-                        to_screen(a.pos, center, scale),
-                        to_screen(b.pos, center, scale),
-                    ],
-                    egui::Stroke::new(1.0, color),
-                );
+                if color.to_opaque() != Color32::BLACK {
+                    // skip blank traces
+                    painter.line_segment(
+                        [
+                            to_screen(a.pos, center, scale),
+                            to_screen(b.pos, center, scale),
+                        ],
+                        egui::Stroke::new(1.0, color),
+                    );
+                }
             }
         });
 

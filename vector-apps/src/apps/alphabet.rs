@@ -1,3 +1,5 @@
+use core::f32;
+
 use alloc::{string::String, vec::Vec};
 use hershey_text::fonts;
 use itertools::Itertools;
@@ -5,7 +7,10 @@ use itertools::Itertools;
 use crate::{
     apps::VectorApp,
     point::{Path, Point},
-    utils::text::text_to_path,
+    utils::{
+        colors::hsl_to_rgb,
+        text::{text_to_path, text_to_path_gradient},
+    },
 };
 
 pub struct AlphabetDemo {
@@ -14,8 +19,6 @@ pub struct AlphabetDemo {
 
 impl AlphabetDemo {
     pub fn new(text: String) -> Self {
-        let color = (255, 0, 0);
-
         let points = text
             .chars()
             .chunks(8)
@@ -23,13 +26,13 @@ impl AlphabetDemo {
             .take(5)
             .enumerate()
             .map(|(i, mut line)| {
-                text_to_path(
+                text_to_path_gradient(
                     &line.join(""),
                     0,
                     32 + 32 * i as u8,
                     1.0,
                     1.0,
-                    color,
+                    |x| hsl_to_rgb(x * 0.005, 1.0, 0.5),
                     fonts::ROMANS,
                 )
             })

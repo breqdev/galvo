@@ -24,15 +24,18 @@ fn clamp_dt(dt: f32) -> u16 {
     dt.clamp(DT_MIN as f32, DT_MAX as f32) as u16
 }
 
-pub fn text_to_path(
+pub fn text_to_path_gradient<F>(
     text: &str,
     x: u8,
     y: u8,
     x_scale: f32,
     y_scale: f32,
-    color: (u8, u8, u8),
+    color: F,
     font: FontMapping,
-) -> Vec<Point> {
+) -> Vec<Point>
+where
+    F: Fn(f32) -> (u8, u8, u8),
+{
     let strokes = render_text(text, font);
     let mut points = Vec::new();
 
@@ -40,12 +43,18 @@ pub fn text_to_path(
         return points;
     }
 
+    let mut cum_dist = 0.0;
+
     // Emit first point
     let first = &strokes[0];
     points.push(Point {
         x: map_to_dac(first.x as f32 * x_scale + x as f32),
         y: map_to_dac(first.y as f32 * y_scale + y as f32),
-        color: if first.pen { color } else { (0, 0, 0) },
+        color: if first.pen {
+            color(cum_dist)
+        } else {
+            (0, 0, 0)
+        },
         delay: 300,
     });
 
@@ -76,10 +85,12 @@ pub fn text_to_path(
             let step_dist = d / steps as f32;
             let dt = clamp_dt((step_dist / velocity) * 1_000_000.0);
 
+            cum_dist += step_dist;
+
             points.push(Point {
                 x: map_to_dac(fx * x_scale + x as f32),
                 y: map_to_dac(fy * y_scale + y as f32),
-                color: if to.pen { color } else { (0, 0, 0) },
+                color: if to.pen { color(cum_dist) } else { (0, 0, 0) },
                 delay: dt,
             });
         }
@@ -105,7 +116,7 @@ pub fn text_to_path(
                     points.push(Point {
                         x: map_to_dac(to.x as f32 * x_scale + x as f32),
                         y: map_to_dac(to.y as f32 * y_scale + y as f32),
-                        color,
+                        color: color(cum_dist),
                         delay: (CORNER_DWELL_US as f32 * sharpness) as u16,
                     });
                 }
@@ -114,4 +125,16 @@ pub fn text_to_path(
     }
 
     points
+}
+
+pub fn text_to_path(
+    text: &str,
+    x: u8,
+    y: u8,
+    x_scale: f32,
+    y_scale: f32,
+    color: (u8, u8, u8),
+    font: FontMapping,
+) -> Vec<Point> {
+    text_to_path_gradient(text, x, y, x_scale, y_scale, |_| color, font)
 }
