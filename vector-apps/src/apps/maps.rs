@@ -1,7 +1,7 @@
 use alloc::vec::Vec;
 
 use crate::{
-    apps::VectorApp,
+    apps::{Controls, VectorApp},
     point::{Path, Point},
     utils::math::Vec2,
 };
@@ -248,23 +248,35 @@ fn normalize(lines: &mut Polylines<Vec2>, side_m: f32) {
 
 pub struct Maps {
     path: Path,
+    lat: f32,
+    lon: f32,
 }
+
+const SIDE_METERS: f32 = 400.0;
 
 impl Maps {
     pub fn new() -> Self {
-        let mut path: Path = Vec::new();
+        let path: Path = Vec::new();
+
+        let mut map = Self {
+            path,
+            lat: 42.39625701047068,
+            lon: -71.10866957285928,
+        };
+        map.generate_path();
+        map
+    }
+
+    fn generate_path(&mut self) {
+        self.path.clear();
 
         let raw = include_str!("roads.txt");
         let latlon = parse_latlon_file(raw);
 
-        let lat0 = 42.39625701047068;
-        let lon0 = -71.10866957285928;
-        let side_meters = 400.0;
-
-        let mut lines = project_and_crop(&latlon, lat0, lon0, side_meters);
+        let mut lines = project_and_crop(&latlon, self.lat, self.lon, SIDE_METERS);
         lines = merge_connected_lines(lines, 0.5); // 0.5m tolerance
         lines = greedy_order_lines(lines);
-        normalize(&mut lines, side_meters);
+        normalize(&mut lines, SIDE_METERS);
 
         let mut prev: Option<(u8, u8)> = None;
 
@@ -293,7 +305,7 @@ impl Maps {
                     };
 
                     // Pen-up move
-                    path.push(Point {
+                    self.path.push(Point {
                         x,
                         y,
                         color: (0, 0, 0),
@@ -301,7 +313,7 @@ impl Maps {
                     });
 
                     // Turn laser on
-                    path.push(Point {
+                    self.path.push(Point {
                         x,
                         y,
                         color: (255, 0, 0),
@@ -323,7 +335,7 @@ impl Maps {
                         let ix = libm::roundf(px as f32 + dx * t) as u8;
                         let iy = libm::roundf(py as f32 + dy * t) as u8;
 
-                        path.push(Point {
+                        self.path.push(Point {
                             x: ix,
                             y: iy,
                             color: (255, 0, 0),
@@ -332,7 +344,7 @@ impl Maps {
                     }
 
                     // Small settle at the vertex
-                    path.push(Point {
+                    self.path.push(Point {
                         x,
                         y,
                         color: (255, 0, 0),
@@ -343,12 +355,19 @@ impl Maps {
                 }
             }
         }
-
-        Self { path }
     }
 }
 impl VectorApp for Maps {
     fn get_path(&mut self, _frame: u64) -> &Path {
         &self.path
+    }
+
+    fn handle_controls(&mut self, controls: Controls) {
+        let cos_lat = libm::cosf(self.lat.to_radians());
+
+        self.lat += controls.y as f32 * 10.0 / METERS_PER_DEG;
+        self.lon += controls.x as f32 * 10.0 / (METERS_PER_DEG * cos_lat);
+
+        self.generate_path();
     }
 }
