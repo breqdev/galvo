@@ -205,7 +205,7 @@ impl Asteroids {
         self.asteroids.extend(new_asteroids);
     }
 
-    fn draw_circle(&mut self, center: Vec2, r: f32, color: u8) {
+    fn draw_circle(&mut self, center: Vec2, r: f32, color: (u8, u8, u8)) {
         const SEGMENTS: usize = 24;
         let mut prev = None;
         let to_u8 = |v: f32| (v.clamp(0.0, 1.0) * 255.0) as u8;
@@ -228,7 +228,7 @@ impl Asteroids {
                 self.path.push(Point {
                     x: to_u8(p.x),
                     y: to_u8(p.y),
-                    color: 0,
+                    color: (0, 0, 0),
                     delay: 1000,
                 });
             }
@@ -259,25 +259,25 @@ impl Asteroids {
         self.path.push(Point {
             x: to_u8(p0.x),
             y: to_u8(p0.y),
-            color: 0,
+            color: (0, 0, 0),
             delay: 1000,
         });
         self.path.push(Point {
             x: to_u8(p1.x),
             y: to_u8(p1.y),
-            color: 255,
+            color: (255, 0, 0),
             delay: 500,
         });
         self.path.push(Point {
             x: to_u8(p2.x),
             y: to_u8(p2.y),
-            color: 255,
+            color: (255, 0, 0),
             delay: 500,
         });
         self.path.push(Point {
             x: to_u8(p0.x),
             y: to_u8(p0.y),
-            color: 255,
+            color: (255, 0, 0),
             delay: 500,
         });
     }
@@ -295,26 +295,26 @@ impl Asteroids {
                 let a = &self.asteroids[i];
                 (a.pos, a.size.radius())
             };
-            self.draw_circle(pos, radius, 1);
+            self.draw_circle(pos, radius, (255, 0, 0));
         }
 
         for b in &self.bullets {
             self.path.push(Point {
                 x: to_u8(b.pos.x),
                 y: to_u8(b.pos.y),
-                color: 0,
+                color: (0, 0, 0),
                 delay: 1000,
             });
             self.path.push(Point {
                 x: to_u8(b.pos.x),
                 y: to_u8(b.pos.y),
-                color: 1,
+                color: (0, 0, 0),
                 delay: 100,
             });
             self.path.push(Point {
                 x: to_u8(b.pos.x + b.vel.x),
                 y: to_u8(b.pos.y + b.vel.y),
-                color: 1,
+                color: (0, 0, 0),
                 delay: 200,
             });
         }
@@ -324,7 +324,7 @@ impl Asteroids {
         self.path.push(Point {
             x: 128,
             y: 128,
-            color: 0,
+            color: (0, 0, 0),
             delay: 0,
         })
     }

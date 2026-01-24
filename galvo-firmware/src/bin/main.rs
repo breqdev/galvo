@@ -6,8 +6,6 @@
     holding buffers for the duration of a data transfer."
 )]
 
-use core::net::{IpAddr, SocketAddr};
-
 use alloc::boxed::Box;
 use alloc::vec::Vec;
 use embassy_executor::Spawner;
@@ -16,25 +14,26 @@ use embassy_time::{Duration, Timer};
 use esp_backtrace as _;
 use esp_hal::clock::CpuClock;
 use esp_hal::delay::Delay;
+use esp_hal::ledc::timer::TimerIFace;
+use esp_hal::ledc::{Ledc, LowSpeed, timer};
 use esp_hal::otg_fs::{Usb, UsbBus};
 use esp_hal::rng::Rng;
 use esp_hal::rtc_cntl::Rtc;
+use esp_hal::time::Rate;
 use esp_hal::timer::timg::TimerGroup;
 use esp_radio::Controller;
 use galvo_driver::network::{RtcTimeSource, SharedRtc, connection, get_time_ntp, net_task};
 use galvo_driver::protocol::{Command, Response};
 use usb_device::prelude::{UsbDeviceBuilder, UsbVidPid};
 use usbd_serial::{SerialPort, USB_CLASS_CDC};
-use vector_apps::apps::clock::{Clock, TimeSource};
+use vector_apps::apps::clock::Clock;
 use vector_apps::apps::{self, VectorApp};
 
 use log::info;
 
 use embassy_sync::blocking_mutex::Mutex;
-use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use galvo_driver::lasers::Lasers;
 use galvo_driver::led::IndicatorLed;
-use sntpc::{NtpContext, NtpTimestampGenerator, get_time};
 use vector_apps::apps::alphabet::AlphabetDemo;
 use vector_apps::apps::asteroids::Asteroids;
 use vector_apps::apps::cube::CubeDemo;
@@ -80,10 +79,22 @@ async fn main(spawner: Spawner) -> ! {
     let mut indicator = IndicatorLed::new(peripherals.GPIO38, peripherals.RMT, peripherals.GPIO39);
     indicator.set_color(smart_leds::colors::RED);
 
+    let ledc = Ledc::new(peripherals.LEDC);
+    let mut timer = ledc.timer::<LowSpeed>(timer::Number::Timer0);
+    timer
+        .configure(timer::config::Config {
+            duty: timer::config::Duty::Duty8Bit,
+            clock_source: timer::LSClockSource::APBClk,
+            frequency: Rate::from_khz(24),
+        })
+        .unwrap();
+
     let mut lasers = Lasers::new(
         peripherals.GPIO9,
         peripherals.GPIO8,
         peripherals.GPIO7,
+        ledc,
+        &timer,
         peripherals.DAC2,
         peripherals.GPIO18,
         peripherals.DAC1,

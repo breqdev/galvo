@@ -13,7 +13,7 @@ pub struct AlphabetDemo {
 
 impl AlphabetDemo {
     pub fn new() -> Self {
-        let color = 1;
+        let color = (255, 0, 0);
 
         let mut points = text_to_path("12345678", 0, 32, 1.0, 1.0, color, fonts::ROMANS);
 

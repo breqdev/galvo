@@ -61,13 +61,13 @@ impl Maps {
                 path.push(Point {
                     x,
                     y,
-                    color: 0,
+                    color: (0, 0, 0),
                     delay,
                 });
                 path.push(Point {
                     x,
                     y,
-                    color: 1,
+                    color: (255, 0, 0),
                     delay: 1,
                 });
                 prev = Some((x, y));
@@ -90,7 +90,7 @@ impl Maps {
                 path.push(Point {
                     x: ix,
                     y: iy,
-                    color: 1,
+                    color: (255, 0, 0),
                     delay: 1, // small delay between interpolated points
                 });
             }
@@ -99,7 +99,7 @@ impl Maps {
             path.push(Point {
                 x,
                 y,
-                color: 1,
+                color: (255, 0, 0),
                 delay: 100,
             });
 

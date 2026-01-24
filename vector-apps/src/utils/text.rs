@@ -30,7 +30,7 @@ pub fn text_to_path(
     y: u8,
     x_scale: f32,
     y_scale: f32,
-    color: u8,
+    color: (u8, u8, u8),
     font: FontMapping,
 ) -> Vec<Point> {
     let strokes = render_text(text, font);
@@ -45,7 +45,7 @@ pub fn text_to_path(
     points.push(Point {
         x: map_to_dac(first.x as f32 * x_scale + x as f32),
         y: map_to_dac(first.y as f32 * y_scale + y as f32),
-        color: if first.pen { color } else { 0 },
+        color: if first.pen { color } else { (0, 0, 0) },
         delay: 300,
     });
 
@@ -79,7 +79,7 @@ pub fn text_to_path(
             points.push(Point {
                 x: map_to_dac(fx * x_scale + x as f32),
                 y: map_to_dac(fy * y_scale + y as f32),
-                color: if to.pen { color } else { 0 },
+                color: if to.pen { color } else { (0, 0, 0) },
                 delay: dt,
             });
         }
