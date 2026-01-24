@@ -1,16 +1,12 @@
 use std::{
-    sync::{
-        Arc,
-        atomic::{AtomicU32, Ordering},
-        mpsc::Sender,
-    },
+    sync::mpsc::{Receiver, Sender},
     thread,
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
 use vector_apps::{
     apps::{
-        VectorApp,
+        Controls, VectorApp,
         alphabet::AlphabetDemo,
         asteroids::Asteroids,
         clock::{Clock, TimeSource},
@@ -24,8 +20,6 @@ use vector_apps::{
 pub struct SystemTimeSource;
 impl TimeSource for SystemTimeSource {
     fn now(&self) -> u64 {
-        use std::time::{SystemTime, UNIX_EPOCH};
-
         SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
@@ -33,12 +27,12 @@ impl TimeSource for SystemTimeSource {
     }
 }
 
-pub fn painter(tx: Sender<Point>) {
+pub fn painter(tx: Sender<Point>, rx: Receiver<Controls>) {
     let mut app = Cycle::new(vec![
-        // Box::new(AlphabetDemo::new()),
-        // Box::new(CubeDemo::new()),
-        // Box::new(Asteroids::new()),
-        // Box::new(Maps::new()),
+        Box::new(AlphabetDemo::new("Hello World!".to_string())),
+        Box::new(CubeDemo::new()),
+        Box::new(Asteroids::new()),
+        Box::new(Maps::new()),
         Box::new(Clock::new(SystemTimeSource)),
     ]);
 
@@ -49,6 +43,10 @@ pub fn painter(tx: Sender<Point>) {
         for point in path {
             tx.send(*point).unwrap();
             thread::sleep(Duration::from_micros(point.delay as u64));
+        }
+
+        while let Ok(controls) = rx.try_recv() {
+            app.handle_controls(controls);
         }
 
         frame += 1;

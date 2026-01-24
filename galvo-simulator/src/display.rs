@@ -1,13 +1,13 @@
 use std::{
     collections::VecDeque,
-    sync::mpsc::Receiver,
+    sync::mpsc::{Receiver, Sender},
     time::{Duration, Instant},
 };
 
 use egui::{Color32, Pos2};
 use iterslide::SlideIterator;
 
-use vector_apps::point::Point;
+use vector_apps::{apps::Controls, point::Point};
 
 struct TrailPoint {
     pos: Point,
@@ -16,14 +16,16 @@ struct TrailPoint {
 
 pub struct Display {
     trail: VecDeque<TrailPoint>,
-    receiver: Receiver<Point>,
+    rx: Receiver<Point>,
+    tx: Sender<Controls>,
 }
 
 impl Display {
-    pub fn new(receiver: Receiver<Point>) -> Self {
+    pub fn new(rx: Receiver<Point>, tx: Sender<Controls>) -> Self {
         Self {
             trail: VecDeque::new(),
-            receiver,
+            rx,
+            tx,
         }
     }
 }
@@ -39,7 +41,7 @@ impl eframe::App for Display {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         let now = Instant::now();
 
-        while let Ok(point) = self.receiver.try_recv() {
+        while let Ok(point) = self.rx.try_recv() {
             self.trail.push_front(TrailPoint {
                 pos: point,
                 ts: now,
@@ -48,7 +50,7 @@ impl eframe::App for Display {
 
         loop {
             match self.trail.back() {
-                Some(point) if point.ts < now - Duration::from_millis(10) => {
+                Some(point) if point.ts < now - Duration::from_millis(100) => {
                     self.trail.pop_back().unwrap();
                 }
                 _ => break,
@@ -57,6 +59,41 @@ impl eframe::App for Display {
 
         egui::CentralPanel::default().show(ctx, |ui| {
             // ui.heading("Galvo Simulator");
+
+            // Build controls state to send to application
+
+            let ctrl_x = if ctx.input(|i| i.key_pressed(egui::Key::ArrowLeft)) {
+                -1
+            } else {
+                0
+            } + if ctx.input(|i| i.key_pressed(egui::Key::ArrowRight)) {
+                1
+            } else {
+                0
+            };
+
+            let ctrl_y = if ctx.input(|i| i.key_pressed(egui::Key::ArrowUp)) {
+                -1
+            } else {
+                0
+            } + if ctx.input(|i| i.key_pressed(egui::Key::ArrowDown)) {
+                1
+            } else {
+                0
+            };
+
+            let a = ctx.input(|i| i.key_pressed(egui::Key::Space));
+            let b = ctx.input(|i| i.key_pressed(egui::Key::Enter));
+
+            let controls = Controls {
+                x: ctrl_x,
+                y: ctrl_y,
+                a,
+                b,
+            };
+            self.tx.send(controls).unwrap();
+
+            // Render application
 
             let (rect, _) = ui.allocate_exact_size(ui.available_size(), egui::Sense::hover());
 
@@ -74,11 +111,12 @@ impl eframe::App for Display {
 
                 let alpha = ((1.0 - (age.as_secs_f32() / 0.1)) * 255.0) as u8;
 
-                let color = if a.pos.color > 0 {
-                    Color32::from_rgba_unmultiplied(255, 0, 0, alpha)
-                } else {
-                    Color32::from_rgba_unmultiplied(127, 127, 127, alpha / 2)
-                };
+                let color = Color32::from_rgba_unmultiplied(
+                    a.pos.color.0,
+                    a.pos.color.1,
+                    a.pos.color.2,
+                    alpha,
+                );
 
                 painter.line_segment(
                     [
