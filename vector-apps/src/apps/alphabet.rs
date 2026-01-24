@@ -1,5 +1,6 @@
-use alloc::vec::Vec;
+use alloc::{string::String, vec::Vec};
 use hershey_text::fonts;
+use itertools::Itertools;
 
 use crate::{
     apps::VectorApp,
@@ -12,66 +13,28 @@ pub struct AlphabetDemo {
 }
 
 impl AlphabetDemo {
-    pub fn new() -> Self {
+    pub fn new(text: String) -> Self {
         let color = (255, 0, 0);
 
-        let mut points = text_to_path("12345678", 0, 32, 1.0, 1.0, color, fonts::ROMANS);
-
-        // points.append(&mut text_to_path(
-        //     "12345678",
-        //     0,
-        //     64,
-        //     1.0,
-        //     1.0,
-        //     color,
-        //     fonts::ROMANS,
-        // ));
-        points.append(&mut text_to_path(
-            "!@#$%^&*",
-            0,
-            96,
-            1.0,
-            1.0,
-            color,
-            fonts::ROMANS,
-        ));
-        // points.append(&mut text_to_path(
-        //     "ABCDEFGH",
-        //     0,
-        //     128,
-        //     1.0,
-        //     1.0,
-        //     color,
-        //     fonts::ROMANS,
-        // ));
-        points.append(&mut text_to_path(
-            "ABCDEFGH",
-            0,
-            160,
-            1.0,
-            1.0,
-            color,
-            fonts::ROMANS,
-        ));
-        // points.append(&mut text_to_path("abcdefgh", 255, 128, -1.0, 1.0));
-        // points.append(&mut text_to_path(
-        //     "abcdefgh",
-        //     0,
-        //     192,
-        //     1.0,
-        //     1.0,
-        //     color,
-        //     fonts::ROMANS,
-        // ));
-        points.append(&mut text_to_path(
-            "abcdefgh",
-            0,
-            224,
-            1.0,
-            1.0,
-            color,
-            fonts::ROMANS,
-        ));
+        let points = text
+            .chars()
+            .chunks(8)
+            .into_iter()
+            .take(5)
+            .enumerate()
+            .map(|(i, mut line)| {
+                text_to_path(
+                    &line.join(""),
+                    0,
+                    32 + 32 * i as u8,
+                    1.0,
+                    1.0,
+                    color,
+                    fonts::ROMANS,
+                )
+            })
+            .flatten()
+            .collect();
 
         Self { points }
     }

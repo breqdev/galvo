@@ -17,12 +17,14 @@ use esp_hal::delay::Delay;
 use esp_hal::ledc::timer::TimerIFace;
 use esp_hal::ledc::{Ledc, LowSpeed, timer};
 use esp_hal::otg_fs::{Usb, UsbBus};
-use esp_hal::rng::Rng;
+use esp_hal::rng::{Rng, Trng, TrngSource};
 use esp_hal::rtc_cntl::Rtc;
 use esp_hal::time::Rate;
 use esp_hal::timer::timg::TimerGroup;
 use esp_radio::Controller;
-use galvo_driver::network::{RtcTimeSource, SharedRtc, connection, get_time_ntp, net_task};
+use galvo_driver::network::{
+    RtcTimeSource, SharedRtc, connection, get_mastodon_status, get_time_ntp, net_task,
+};
 use galvo_driver::protocol::{Command, Response};
 use usb_device::prelude::{UsbDeviceBuilder, UsbVidPid};
 use usbd_serial::{SerialPort, USB_CLASS_CDC};
@@ -130,7 +132,7 @@ async fn main(spawner: Spawner) -> ! {
     let (stack, runner) = embassy_net::new(
         wifi_interface,
         config,
-        mk_static!(StackResources<3>, StackResources::<3>::new()),
+        mk_static!(StackResources<8>, StackResources::<8>::new()),
         seed,
     );
 
@@ -141,7 +143,11 @@ async fn main(spawner: Spawner) -> ! {
 
     indicator.set_color(smart_leds::colors::YELLOW);
 
-    get_time_ntp(&stack, rtc).await;
+    Timer::after(Duration::from_millis(1000)).await;
+
+    // get_time_ntp(&stack, rtc).await;
+
+    let post = get_mastodon_status(&stack).await;
 
     indicator.set_color(smart_leds::colors::GREEN);
 
@@ -154,11 +160,11 @@ async fn main(spawner: Spawner) -> ! {
     // let mut active_demo: Box<dyn apps::VectorApp> = Box::new(apps::maps::Maps::new());
 
     let mut apps: Vec<Box<dyn VectorApp>> = Vec::with_capacity(4);
-    // apps.push(Box::new(AlphabetDemo::new()));
+    apps.push(Box::new(AlphabetDemo::new(post)));
     // apps.push(Box::new(CubeDemo::new()));
     // apps.push(Box::new(Asteroids::new()));
     // apps.push(Box::new(Maps::new()));
-    apps.push(Box::new(Clock::new(RtcTimeSource::new(rtc))));
+    // apps.push(Box::new(Clock::new(RtcTimeSource::new(rtc))));
 
     let mut active_demo: Box<dyn apps::VectorApp> = Box::new(Cycle::new(apps));
 

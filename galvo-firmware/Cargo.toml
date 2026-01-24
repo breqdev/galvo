@@ -85,6 +85,8 @@ serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
 vector-apps ={ path = "../vector-apps" }
 jiff = { version = "0.2.10", default-features = false, features = ["static"] }
 embassy-sync = "0.7.2"
+embedded-tls ={ version = "0.17.0", default-features = false, features = ["alloc"] }
+rand_core = "0.6.4"
 
 [profile.dev]
 # Rust debug is too slow.

@@ -7,7 +7,7 @@ fn map_to_dac(v: f32) -> u8 {
     v.clamp(0.0, 255.0) as u8
 }
 
-const DRAW_VELOCITY: f32 = 40000.0; // galvo units / second
+const DRAW_VELOCITY: f32 = 20000.0; // galvo units / second
 const TRAVEL_VELOCITY: f32 = 40000.0; // faster when laser off
 const MAX_STEP: f32 = 4.0; // max distance per emitted point
 const DT_MIN: u16 = 0; // µs

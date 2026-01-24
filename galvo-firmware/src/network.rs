@@ -1,16 +1,29 @@
 use core::net::{IpAddr, SocketAddr};
 
+use alloc::{
+    borrow::ToOwned,
+    format,
+    string::{String, ToString},
+    vec::Vec,
+};
 use embassy_net::{
     Runner, Stack,
     dns::DnsQueryType,
+    tcp::TcpSocket,
     udp::{PacketMetadata, UdpSocket},
 };
 use embassy_sync::blocking_mutex::{Mutex, raw::CriticalSectionRawMutex};
 use embassy_time::{Duration, Timer};
-use esp_hal::rtc_cntl::Rtc;
+use embedded_tls::{Aes128GcmSha256, NoVerify, TlsConfig, TlsConnection, TlsContext};
+use esp_hal::{
+    rng::{Rng, Trng},
+    rtc_cntl::Rtc,
+};
 use esp_radio::wifi::{
     ClientConfig, ModeConfig, WifiController, WifiDevice, WifiEvent, WifiStaState,
 };
+use rand_core::{CryptoRng, RngCore};
+use serde_json::Value;
 use sntpc::{NtpContext, NtpTimestampGenerator, get_time};
 use vector_apps::apps::clock::TimeSource;
 
@@ -161,6 +174,163 @@ pub async fn get_time_ntp(stack: &Stack<'_>, rtc: &'static SharedRtc) {
             }
         }
     }
+}
+
+pub struct DangerouslyInsecureRng {
+    rng: Rng,
+}
+
+impl RngCore for DangerouslyInsecureRng {
+    fn next_u32(&mut self) -> u32 {
+        self.rng.next_u32()
+    }
+
+    fn next_u64(&mut self) -> u64 {
+        self.rng.next_u64()
+    }
+
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        self.rng.fill_bytes(dest)
+    }
+
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), rand_core::Error> {
+        self.rng.try_fill_bytes(dest)
+    }
+}
+
+impl CryptoRng for DangerouslyInsecureRng {}
+
+pub async fn get_mastodon_status(stack: &Stack<'_>) -> String {
+    // --- DNS ---
+    let addrs = stack
+        .dns_query("tacobelllabs.net", DnsQueryType::A)
+        .await
+        .unwrap();
+
+    if addrs.is_empty() {
+        panic!();
+    }
+
+    let ip = addrs[0];
+
+    // --- TCP socket buffers ---
+    let mut rx_buffer = [0u8; 4096];
+    let mut tx_buffer = [0u8; 4096];
+
+    let mut socket = TcpSocket::new(*stack, &mut rx_buffer, &mut tx_buffer);
+
+    socket.connect((ip, 443)).await.unwrap();
+
+    // --- TLS ---
+    let config = TlsConfig::<Aes128GcmSha256>::new().with_server_name("tacobelllabs.net");
+
+    let mut read_record_buffer = [0; 16384];
+    let mut write_record_buffer = [0; 16384];
+
+    let mut tls = TlsConnection::new(socket, &mut read_record_buffer, &mut write_record_buffer);
+
+    let mut rng = Trng::try_new().unwrap();
+
+    tls.open::<_, NoVerify>(TlsContext::new(&config, &mut rng))
+        .await
+        .unwrap();
+
+    // --- HTTP request ---
+    let req = concat!(
+        "GET /api/v1/statuses/115940750467337748 HTTP/1.1\r\n",
+        "Host: tacobelllabs.net\r\n",
+        "User-Agent: esp32\r\n",
+        "Accept: application/json\r\n",
+        "Connection: close\r\n",
+        "\r\n",
+    );
+
+    let mut written = 0;
+    let bytes = req.as_bytes();
+
+    while written < bytes.len() {
+        let n = tls.write(&bytes[written..]).await.unwrap();
+
+        if n == 0 {
+            // socket closed unexpectedly
+            panic!();
+        }
+
+        written += n;
+    }
+
+    tls.flush().await.unwrap();
+
+    // --- Read response ---
+    let mut response = Vec::new();
+    let mut buf = [0u8; 512];
+    let mut content_length: Option<usize> = None;
+    let mut body_start = None;
+
+    loop {
+        let n = tls.read(&mut buf).await.unwrap();
+        if n == 0 {
+            break;
+        }
+
+        response.extend_from_slice(&buf[..n]);
+
+        if body_start.is_none() {
+            if let Some(pos) = response.windows(4).position(|w| w == b"\r\n\r\n") {
+                body_start = Some(pos + 4);
+
+                let headers = &response[..pos];
+                let headers_str = core::str::from_utf8(headers).unwrap();
+
+                for line in headers_str.lines() {
+                    if let Some(v) = line.strip_prefix("Content-Length:") {
+                        content_length = Some(v.trim().parse().unwrap());
+                    }
+                }
+
+                break;
+            }
+        }
+    }
+
+    let body_start = body_start.unwrap();
+    let content_length = content_length.unwrap();
+
+    while response.len() < body_start + content_length {
+        let n = tls.read(&mut buf).await.unwrap();
+        if n == 0 {
+            break;
+        }
+        response.extend_from_slice(&buf[..n]);
+    }
+
+    let body = &response[body_start..];
+
+    let json: Value = serde_json::from_slice(body).unwrap();
+
+    let content = json
+        .as_object()
+        .unwrap()
+        .get("content")
+        .unwrap()
+        .as_str()
+        .unwrap()
+        .replace("<p>", "")
+        .replace("</p>", "");
+    let author = json
+        .as_object()
+        .unwrap()
+        .get("account")
+        .unwrap()
+        .as_object()
+        .unwrap()
+        .get("display_name")
+        .unwrap()
+        .as_str()
+        .unwrap();
+
+    format!("{} {}", author, content)
+    // String::from_utf8_lossy(body).to_string()
 }
 
 #[embassy_executor::task]
