@@ -6,22 +6,48 @@
     holding buffers for the duration of a data transfer."
 )]
 
+use core::net::{IpAddr, SocketAddr};
+
 use alloc::boxed::Box;
+use alloc::vec::Vec;
 use embassy_executor::Spawner;
+use embassy_net::udp::{PacketMetadata, UdpSocket};
+use embassy_net::{DhcpConfig, Runner, Stack, StackResources};
+use embassy_time::{Duration, Timer};
 use esp_backtrace as _;
 use esp_hal::clock::CpuClock;
 use esp_hal::delay::Delay;
 use esp_hal::otg_fs::{Usb, UsbBus};
+use esp_hal::rng::Rng;
+use esp_hal::rtc_cntl::Rtc;
 use esp_hal::timer::timg::TimerGroup;
+use esp_radio::Controller;
+use esp_radio::wifi::{
+    ClientConfig, ModeConfig, WifiController, WifiDevice, WifiEvent, WifiStaState,
+};
 use galvo_driver::protocol::{Command, Response};
+use smoltcp::wire::DnsQueryType;
 use usb_device::prelude::{UsbDeviceBuilder, UsbVidPid};
 use usbd_serial::{SerialPort, USB_CLASS_CDC};
-use vector_apps::apps;
+use vector_apps::apps::clock::{Clock, TimeSource};
+use vector_apps::apps::{self, VectorApp};
 
 use log::info;
 
+use embassy_sync::blocking_mutex::Mutex;
+use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use galvo_driver::lasers::Lasers;
 use galvo_driver::led::IndicatorLed;
+use sntpc::{NtpContext, NtpTimestampGenerator, get_time};
+use vector_apps::apps::alphabet::AlphabetDemo;
+use vector_apps::apps::asteroids::Asteroids;
+use vector_apps::apps::cube::CubeDemo;
+use vector_apps::apps::cycle::Cycle;
+use vector_apps::apps::maps::Maps;
+
+type SharedRtc = Mutex<CriticalSectionRawMutex, Rtc<'static>>;
+
+const NTP_SERVER: &str = "pool.ntp.org";
 
 extern crate alloc;
 
@@ -29,7 +55,54 @@ extern crate alloc;
 // For more information see: <https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/system/app_image_format.html#application-description>
 esp_bootloader_esp_idf::esp_app_desc!();
 
+// When you are okay with using a nightly compiler it's better to use https://docs.rs/static_cell/2.1.0/static_cell/macro.make_static.html
+macro_rules! mk_static {
+    ($t:ty,$val:expr) => {{
+        static STATIC_CELL: static_cell::StaticCell<$t> = static_cell::StaticCell::new();
+        #[deny(unused_attributes)]
+        let x = STATIC_CELL.uninit().write(($val));
+        x
+    }};
+}
+
+const SSID: &str = "doggirl daycare";
+const PASSWORD: &str = "puppykittenT4T";
+
 static mut EP_MEMORY: [u32; 1024] = [0; 1024];
+
+/// Microseconds in a second
+const USEC_IN_SEC: u64 = 1_000_000;
+
+#[derive(Clone, Copy)]
+struct Timestamp {
+    rtc: &'static SharedRtc,
+    current_time_us: u64,
+}
+
+impl NtpTimestampGenerator for Timestamp {
+    fn init(&mut self) {
+        self.rtc
+            .lock(|rtc| self.current_time_us = rtc.current_time_us());
+    }
+
+    fn timestamp_sec(&self) -> u64 {
+        self.current_time_us / USEC_IN_SEC
+    }
+
+    fn timestamp_subsec_micros(&self) -> u32 {
+        (self.current_time_us % USEC_IN_SEC) as u32
+    }
+}
+
+struct RtcTimeSource {
+    rtc: &'static SharedRtc,
+}
+
+impl TimeSource for RtcTimeSource {
+    fn now(&self) -> u64 {
+        self.rtc.lock(|rtc| rtc.current_time_us() / USEC_IN_SEC)
+    }
+}
 
 #[esp_rtos::main]
 async fn main(spawner: Spawner) -> ! {
@@ -47,14 +120,10 @@ async fn main(spawner: Spawner) -> ! {
 
     info!("Embassy initialized!");
 
-    let radio_init = esp_radio::init().expect("Failed to initialize Wi-Fi/BLE controller");
-    let (mut _wifi_controller, _interfaces) =
-        esp_radio::wifi::new(&radio_init, peripherals.WIFI, Default::default())
-            .expect("Failed to initialize Wi-Fi controller");
-
     let delay = Delay::new();
 
     let mut indicator = IndicatorLed::new(peripherals.GPIO38, peripherals.RMT, peripherals.GPIO39);
+    indicator.set_color(smart_leds::colors::RED);
 
     let mut lasers = Lasers::new(
         peripherals.GPIO9,
@@ -75,8 +144,40 @@ async fn main(spawner: Spawner) -> ! {
         .device_class(USB_CLASS_CDC)
         .build();
 
-    // TODO: Spawn some tasks
-    let _ = spawner;
+    let rtc = mk_static!(SharedRtc, Mutex::new(Rtc::new(peripherals.LPWR)));
+
+    let esp_radio_ctrl = &*mk_static!(Controller<'static>, esp_radio::init().unwrap());
+
+    let (controller, interfaces) =
+        esp_radio::wifi::new(&esp_radio_ctrl, peripherals.WIFI, Default::default()).unwrap();
+
+    let wifi_interface = interfaces.sta;
+
+    let mut dhcp_options: DhcpConfig = Default::default();
+    dhcp_options.hostname = Some(heapless::String::try_from("laser-esp32").unwrap());
+    let config = embassy_net::Config::dhcpv4(dhcp_options);
+
+    let rng = Rng::new();
+    let seed = (rng.random() as u64) << 32 | rng.random() as u64;
+
+    // Init network stack
+    let (stack, runner) = embassy_net::new(
+        wifi_interface,
+        config,
+        mk_static!(StackResources<3>, StackResources::<3>::new()),
+        seed,
+    );
+
+    spawner.spawn(connection(controller)).ok();
+    spawner.spawn(net_task(runner)).ok();
+
+    stack.wait_config_up().await;
+
+    indicator.set_color(smart_leds::colors::YELLOW);
+
+    get_time_ntp(&stack, rtc).await;
+
+    indicator.set_color(smart_leds::colors::GREEN);
 
     let mut serial_buffer: [u8; 2048] = [0; 2048];
     let mut serial_rx_length: usize = 0;
@@ -84,7 +185,16 @@ async fn main(spawner: Spawner) -> ! {
     // let mut active_demo: Box<dyn apps::VectorApp> = Box::new(apps::alphabet::AlphabetDemo::new());
     // let mut active_demo: Box<dyn apps::VectorApp> = Box::new(apps::cube::CubeDemo::new());
     // let mut active_demo: Box<dyn apps::VectorApp> = Box::new(apps::asteroids::Asteroids::new());
-    let mut active_demo: Box<dyn apps::VectorApp> = Box::new(apps::maps::Maps::new());
+    // let mut active_demo: Box<dyn apps::VectorApp> = Box::new(apps::maps::Maps::new());
+
+    let mut apps: Vec<Box<dyn VectorApp>> = Vec::with_capacity(4);
+    // apps.push(Box::new(AlphabetDemo::new()));
+    // apps.push(Box::new(CubeDemo::new()));
+    // apps.push(Box::new(Asteroids::new()));
+    // apps.push(Box::new(Maps::new()));
+    apps.push(Box::new(Clock::new(RtcTimeSource { rtc })));
+
+    let mut active_demo: Box<dyn apps::VectorApp> = Box::new(Cycle::new(apps));
 
     let mut frameno: u64 = 0;
 
@@ -141,5 +251,116 @@ async fn main(spawner: Spawner) -> ! {
             // DAC/galvo settling time
             delay.delay_micros(p.delay as u32);
         }
+
+        // yield to other tasks
+        Timer::after(Duration::from_millis(1)).await;
     }
+}
+
+#[embassy_executor::task]
+async fn connection(mut controller: WifiController<'static>) {
+    // println!("start connection task");
+    // println!("Device capabilities: {:?}", controller.capabilities());
+    loop {
+        match esp_radio::wifi::sta_state() {
+            WifiStaState::Connected => {
+                // wait until we're no longer connected
+                controller.wait_for_event(WifiEvent::StaDisconnected).await;
+                Timer::after(Duration::from_millis(5000)).await
+            }
+            _ => {}
+        }
+        if !matches!(controller.is_started(), Ok(true)) {
+            let client_config = ModeConfig::Client(
+                ClientConfig::default()
+                    .with_ssid(SSID.into())
+                    .with_password(PASSWORD.into()),
+            );
+            controller.set_config(&client_config).unwrap();
+            // println!("Starting wifi");
+            controller.start_async().await.unwrap();
+            // println!("Wifi started!");
+
+            // println!("Scan");
+            // let scan_config = ScanConfig::default().with_max(10);
+            // let result = controller
+            //     .scan_with_config_async(scan_config)
+            //     .await
+            //     .unwrap();
+            // for ap in result {
+            //     println!("{:?}", ap);
+            // }
+        }
+        // println!("About to connect...");
+
+        match controller.connect_async().await {
+            Ok(_) => {
+                // println!("Wifi connected!")
+            }
+            Err(_) => {
+                // println!("Failed to connect to wifi: {e:?}");
+                Timer::after(Duration::from_millis(5000)).await
+            }
+        }
+    }
+}
+
+async fn get_time_ntp(stack: &Stack<'_>, rtc: &'static SharedRtc) {
+    let ntp_addrs = stack.dns_query(NTP_SERVER, DnsQueryType::A).await.unwrap();
+
+    if ntp_addrs.is_empty() {
+        panic!("Failed to resolve DNS. Empty result");
+    }
+
+    let mut rx_meta = [PacketMetadata::EMPTY; 16];
+    let mut rx_buffer = [0; 4096];
+    let mut tx_meta = [PacketMetadata::EMPTY; 16];
+    let mut tx_buffer = [0; 4096];
+
+    let mut socket = UdpSocket::new(
+        *stack,
+        &mut rx_meta,
+        &mut rx_buffer,
+        &mut tx_meta,
+        &mut tx_buffer,
+    );
+
+    socket.bind(123).unwrap();
+
+    loop {
+        let addr: IpAddr = ntp_addrs[0].into();
+        let result = get_time(
+            SocketAddr::from((addr, 123)),
+            &socket,
+            NtpContext::new(Timestamp {
+                rtc: &rtc,
+                current_time_us: 0,
+            }),
+        )
+        .await;
+
+        match result {
+            Ok(time) => {
+                // Set time immediately after receiving to reduce time offset.
+                {
+                    rtc.lock(|rtc| {
+                        rtc.set_current_time_us(
+                            (time.sec() as u64 * USEC_IN_SEC)
+                                + ((time.sec_fraction() as u64 * USEC_IN_SEC) >> 32),
+                        );
+                    });
+                }
+
+                return;
+            }
+            Err(_) => {
+                // error!("Error getting time: {e:?}");
+            }
+        }
+    }
+}
+
+#[embassy_executor::task]
+async fn net_task(mut runner: Runner<'static, WifiDevice<'static>>) {
+    runner.run().await
 }

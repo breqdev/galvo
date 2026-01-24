@@ -7,4 +7,5 @@ edition = "2024"
 eframe = "0.33.3"
 egui = "0.33.3"
 iterslide = "1.0.1"
+utc-dt = "0.3.1"
 vector-apps ={ path = "../vector-apps" }

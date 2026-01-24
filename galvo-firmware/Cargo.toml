@@ -24,10 +24,12 @@ log                    = "0.4.27"
 
 embassy-net = { version = "0.7.1", features = [
   "dhcpv4",
+  "dhcpv4-hostname",
   "log",
   "medium-ethernet",
   "tcp",
   "udp",
+  "dns",
 ] }
 embedded-io = "0.7.1"
 embedded-io-async = "0.7.0"
@@ -70,6 +72,10 @@ smart-leds = "0.4.0"
 libm = "0.2.15"
 usb-device = "0.3.2"
 usbd-serial = "0.2.2"
+heapless = "0.8.0"
+sntpc = { version = "0.6.0", default-features = false, features = [
+    "embassy-socket",
+] }
 
 
 serde = { version = "1.0", default-features = false, features = ["derive", "alloc"] }
@@ -77,6 +83,8 @@ serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
 
 
 vector-apps ={ path = "../vector-apps" }
+jiff = { version = "0.2.10", default-features = false, features = ["static"] }
+embassy-sync = "0.7.2"
 
 [profile.dev]
 # Rust debug is too slow.

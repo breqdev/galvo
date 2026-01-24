@@ -921,6 +921,7 @@ dependencies = [
  "critical-section",
  "embassy-executor",
  "embassy-net",
+ "embassy-sync 0.7.2",
  "embassy-time",
  "embedded-io 0.7.1",
  "embedded-io-async 0.7.0",
@@ -932,12 +933,15 @@ dependencies = [
  "esp-println",
  "esp-radio",
  "esp-rtos",
+ "heapless 0.8.0",
+ "jiff",
  "libm",
  "log",
  "serde",
  "serde_json",
  "smart-leds",
  "smoltcp",
+ "sntpc",
  "static_cell",
  "usb-device",
  "usbd-serial",
@@ -1051,9 +1055,9 @@ checksum = "4a5f13b858c8d314ee3e8f639011f7ccefe71f97f96e50151fb991f267928e2c"
 
 [[package]]
 name = "jiff"
-version = "0.2.16"
+version = "0.2.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "49cce2b81f2098e7e3efc35bc2e0a6b7abec9d34128283d7a26fa8f32a6dbb35"
+checksum = "e67e8da4c49d6d9909fe03361f9b620f58898859f5c7aded68351e85e71ecf50"
 dependencies = [
  "jiff-static",
  "log",
@@ -1064,14 +1068,21 @@ dependencies = [
 
 [[package]]
 name = "jiff-static"
-version = "0.2.16"
+version = "0.2.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "980af8b43c3ad5d8d349ace167ec8170839f753a42d233ba19e08afe1850fa69"
+checksum = "e0c84ee7f197eca9a86c6fd6cb771e55eb991632f15f2bc3ca6ec838929e6e78"
 dependencies = [
+ "jiff-tzdb",
  "proc-macro2",
  "quote",
  "syn 2.0.111",
 ]
+
+[[package]]
+name = "jiff-tzdb"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "68971ebff725b9e2ca27a601c5eb38a4c5d64422c4cbab0c535f248087eda5c2"
 
 [[package]]
 name = "libc"
@@ -1445,6 +1456,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "sntpc"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "13d84c42dedf8b01d52b62272684741866938260e74b9e58851f680b2a92854b"
+dependencies = [
+ "cfg-if",
+ "embassy-net",
+]
+
+[[package]]
 name = "somni-expr"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1638,6 +1659,7 @@ name = "vector-apps"
 version = "0.1.0"
 dependencies = [
  "hershey-text",
+ "jiff",
  "libm",
 ]
 

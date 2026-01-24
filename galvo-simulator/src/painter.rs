@@ -1,15 +1,46 @@
-use std::{sync::mpsc::Sender, thread, time::Duration};
+use std::{
+    sync::{
+        Arc,
+        atomic::{AtomicU32, Ordering},
+        mpsc::Sender,
+    },
+    thread,
+    time::{Duration, SystemTime, UNIX_EPOCH},
+};
 
 use vector_apps::{
-    apps::{VectorApp, alphabet::AlphabetDemo, asteroids::Asteroids, cube::CubeDemo, maps::Maps},
+    apps::{
+        VectorApp,
+        alphabet::AlphabetDemo,
+        asteroids::Asteroids,
+        clock::{Clock, TimeSource},
+        cube::CubeDemo,
+        cycle::Cycle,
+        maps::Maps,
+    },
     point::Point,
 };
 
+pub struct SystemTimeSource;
+impl TimeSource for SystemTimeSource {
+    fn now(&self) -> u64 {
+        use std::time::{SystemTime, UNIX_EPOCH};
+
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs()
+    }
+}
+
 pub fn painter(tx: Sender<Point>) {
-    // let mut app: Box<dyn VectorApp> = Box::new(CubeDemo::new());
-    // let mut app: Box<dyn VectorApp> = Box::new(Asteroids::new());
-    let mut app: Box<dyn VectorApp> = Box::new(Maps::new());
-    // let mut app: Box<dyn VectorApp> = Box::new(AlphabetDemo::new());
+    let mut app = Cycle::new(vec![
+        // Box::new(AlphabetDemo::new()),
+        // Box::new(CubeDemo::new()),
+        // Box::new(Asteroids::new()),
+        // Box::new(Maps::new()),
+        Box::new(Clock::new(SystemTimeSource)),
+    ]);
 
     let mut frame = 0;
     loop {

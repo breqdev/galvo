@@ -1157,6 +1157,7 @@ dependencies = [
  "eframe",
  "egui",
  "iterslide",
+ "utc-dt",
  "vector-apps",
 ]
 
@@ -1505,6 +1506,35 @@ name = "iterslide"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bb811b7daf2582ecb3e0d7e231029722a0d02267dc59bca31d6d464f687662e1"
+
+[[package]]
+name = "jiff"
+version = "0.2.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e67e8da4c49d6d9909fe03361f9b620f58898859f5c7aded68351e85e71ecf50"
+dependencies = [
+ "jiff-static",
+ "portable-atomic",
+ "portable-atomic-util",
+]
+
+[[package]]
+name = "jiff-static"
+version = "0.2.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e0c84ee7f197eca9a86c6fd6cb771e55eb991632f15f2bc3ca6ec838929e6e78"
+dependencies = [
+ "jiff-tzdb",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "jiff-tzdb"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "68971ebff725b9e2ca27a601c5eb38a4c5d64422c4cbab0c535f248087eda5c2"
 
 [[package]]
 name = "jni"
@@ -2892,6 +2922,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "utc-dt"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9540e29de59f65d3eb99b2e609362f161f53fc05500095f71cc93323604372c5"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "utf8_iter"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2913,6 +2952,7 @@ name = "vector-apps"
 version = "0.1.0"
 dependencies = [
  "hershey-text",
+ "jiff",
  "libm",
 ]
 
