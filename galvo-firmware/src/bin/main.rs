@@ -17,7 +17,7 @@ use esp_hal::delay::Delay;
 use esp_hal::ledc::timer::TimerIFace;
 use esp_hal::ledc::{Ledc, LowSpeed, timer};
 use esp_hal::otg_fs::{Usb, UsbBus};
-use esp_hal::rng::{Rng, Trng, TrngSource};
+use esp_hal::rng::Rng;
 use esp_hal::rtc_cntl::Rtc;
 use esp_hal::time::Rate;
 use esp_hal::timer::timg::TimerGroup;
@@ -117,7 +117,7 @@ async fn main(spawner: Spawner) -> ! {
     let esp_radio_ctrl = &*mk_static!(Controller<'static>, esp_radio::init().unwrap());
 
     let (controller, interfaces) =
-        esp_radio::wifi::new(&esp_radio_ctrl, peripherals.WIFI, Default::default()).unwrap();
+        esp_radio::wifi::new(esp_radio_ctrl, peripherals.WIFI, Default::default()).unwrap();
 
     let wifi_interface = interfaces.sta;
 
@@ -143,9 +143,7 @@ async fn main(spawner: Spawner) -> ! {
 
     indicator.set_color(smart_leds::colors::YELLOW);
 
-    Timer::after(Duration::from_millis(1000)).await;
-
-    // get_time_ntp(&stack, rtc).await;
+    get_time_ntp(&stack, rtc).await;
 
     let post = get_mastodon_status(&stack).await;
 
@@ -154,17 +152,12 @@ async fn main(spawner: Spawner) -> ! {
     let mut serial_buffer: [u8; 2048] = [0; 2048];
     let mut serial_rx_length: usize = 0;
 
-    // let mut active_demo: Box<dyn apps::VectorApp> = Box::new(apps::alphabet::AlphabetDemo::new());
-    // let mut active_demo: Box<dyn apps::VectorApp> = Box::new(apps::cube::CubeDemo::new());
-    // let mut active_demo: Box<dyn apps::VectorApp> = Box::new(apps::asteroids::Asteroids::new());
-    // let mut active_demo: Box<dyn apps::VectorApp> = Box::new(apps::maps::Maps::new());
-
-    let mut apps: Vec<Box<dyn VectorApp>> = Vec::with_capacity(4);
+    let mut apps: Vec<Box<dyn VectorApp>> = Vec::with_capacity(5);
     apps.push(Box::new(AlphabetDemo::new(post)));
-    // apps.push(Box::new(CubeDemo::new()));
-    // apps.push(Box::new(Asteroids::new()));
-    // apps.push(Box::new(Maps::new()));
-    // apps.push(Box::new(Clock::new(RtcTimeSource::new(rtc))));
+    apps.push(Box::new(CubeDemo::new()));
+    apps.push(Box::new(Asteroids::new()));
+    apps.push(Box::new(Maps::new()));
+    apps.push(Box::new(Clock::new(RtcTimeSource::new(rtc))));
 
     let mut active_demo: Box<dyn apps::VectorApp> = Box::new(Cycle::new(apps));
 
@@ -174,42 +167,42 @@ async fn main(spawner: Spawner) -> ! {
         if usb_dev.poll(&mut [&mut serial]) {
             let mut buf = [0u8; 64];
 
-            if let Ok(count) = serial.read(&mut buf) {
-                if count > 0 {
-                    // Append to RX buffer
-                    if serial_rx_length + count <= serial_buffer.len() {
-                        serial_buffer[serial_rx_length..serial_rx_length + count]
-                            .copy_from_slice(&buf[..count]);
-                        serial_rx_length += count;
-                    }
+            if let Ok(count) = serial.read(&mut buf)
+                && count > 0
+            {
+                // Append to RX buffer
+                if serial_rx_length + count <= serial_buffer.len() {
+                    serial_buffer[serial_rx_length..serial_rx_length + count]
+                        .copy_from_slice(&buf[..count]);
+                    serial_rx_length += count;
+                }
 
-                    // Look for newline delimiter
-                    if let Some(pos) = serial_buffer[..serial_rx_length]
-                        .iter()
-                        .position(|&b| b == b'\n')
+                // Look for newline delimiter
+                if let Some(pos) = serial_buffer[..serial_rx_length]
+                    .iter()
+                    .position(|&b| b == b'\n')
+                {
+                    let json_bytes = &serial_buffer[..pos];
+
+                    if let Ok(s) = core::str::from_utf8(json_bytes)
+                        && let Ok(cmd) = serde_json::from_str::<Command>(s)
                     {
-                        let json_bytes = &serial_buffer[..pos];
-
-                        if let Ok(s) = core::str::from_utf8(json_bytes) {
-                            if let Ok(cmd) = serde_json::from_str::<Command>(s) {
-                                match cmd {
-                                    Command::SetIndicatorLight { r, g, b } => {
-                                        indicator.set_color(smart_leds::RGB { r, g, b });
-                                    }
-                                }
-
-                                let result = Response { success: true };
-
-                                let response = serde_json::to_string(&result).unwrap();
-                                let _ = serial.write(response.as_bytes());
+                        match cmd {
+                            Command::SetIndicatorLight { r, g, b } => {
+                                indicator.set_color(smart_leds::RGB { r, g, b });
                             }
                         }
 
-                        // Remove processed message
-                        let remaining = serial_rx_length - (pos + 1);
-                        serial_buffer.copy_within(pos + 1..serial_rx_length, 0);
-                        serial_rx_length = remaining;
+                        let result = Response { success: true };
+
+                        let response = serde_json::to_string(&result).unwrap();
+                        let _ = serial.write(response.as_bytes());
                     }
+
+                    // Remove processed message
+                    let remaining = serial_rx_length - (pos + 1);
+                    serial_buffer.copy_within(pos + 1..serial_rx_length, 0);
+                    serial_rx_length = remaining;
                 }
             }
         }

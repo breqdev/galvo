@@ -33,7 +33,7 @@ impl<'a> Lasers<'a> {
         let mut red_ch = ledc.channel(channel::Number::Channel0, red);
         red_ch
             .configure(channel::config::Config {
-                timer: timer,
+                timer,
                 duty_pct: 10,
                 drive_mode: DriveMode::PushPull,
             })
@@ -42,7 +42,7 @@ impl<'a> Lasers<'a> {
         let mut green_ch = ledc.channel(channel::Number::Channel1, green);
         green_ch
             .configure(channel::config::Config {
-                timer: timer,
+                timer,
                 duty_pct: 10,
                 drive_mode: DriveMode::PushPull,
             })
@@ -51,7 +51,7 @@ impl<'a> Lasers<'a> {
         let mut blue_ch = ledc.channel(channel::Number::Channel2, blue);
         blue_ch
             .configure(channel::config::Config {
-                timer: timer,
+                timer,
                 duty_pct: 10,
                 drive_mode: DriveMode::PushPull,
             })

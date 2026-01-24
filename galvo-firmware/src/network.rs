@@ -1,11 +1,6 @@
 use core::net::{IpAddr, SocketAddr};
 
-use alloc::{
-    borrow::ToOwned,
-    format,
-    string::{String, ToString},
-    vec::Vec,
-};
+use alloc::{format, string::String, vec::Vec};
 use embassy_net::{
     Runner, Stack,
     dns::DnsQueryType,
@@ -78,13 +73,10 @@ pub async fn connection(mut controller: WifiController<'static>) {
     // println!("start connection task");
     // println!("Device capabilities: {:?}", controller.capabilities());
     loop {
-        match esp_radio::wifi::sta_state() {
-            WifiStaState::Connected => {
-                // wait until we're no longer connected
-                controller.wait_for_event(WifiEvent::StaDisconnected).await;
-                Timer::after(Duration::from_millis(5000)).await
-            }
-            _ => {}
+        if esp_radio::wifi::sta_state() == WifiStaState::Connected {
+            // wait until we're no longer connected
+            controller.wait_for_event(WifiEvent::StaDisconnected).await;
+            Timer::after(Duration::from_millis(5000)).await
         }
         if !matches!(controller.is_started(), Ok(true)) {
             let client_config = ModeConfig::Client(
@@ -149,7 +141,7 @@ pub async fn get_time_ntp(stack: &Stack<'_>, rtc: &'static SharedRtc) {
             SocketAddr::from((addr, 123)),
             &socket,
             NtpContext::new(Timestamp {
-                rtc: &rtc,
+                rtc,
                 current_time_us: 0,
             }),
         )
@@ -275,21 +267,21 @@ pub async fn get_mastodon_status(stack: &Stack<'_>) -> String {
 
         response.extend_from_slice(&buf[..n]);
 
-        if body_start.is_none() {
-            if let Some(pos) = response.windows(4).position(|w| w == b"\r\n\r\n") {
-                body_start = Some(pos + 4);
+        if body_start.is_none()
+            && let Some(pos) = response.windows(4).position(|w| w == b"\r\n\r\n")
+        {
+            body_start = Some(pos + 4);
 
-                let headers = &response[..pos];
-                let headers_str = core::str::from_utf8(headers).unwrap();
+            let headers = &response[..pos];
+            let headers_str = core::str::from_utf8(headers).unwrap();
 
-                for line in headers_str.lines() {
-                    if let Some(v) = line.strip_prefix("Content-Length:") {
-                        content_length = Some(v.trim().parse().unwrap());
-                    }
+            for line in headers_str.lines() {
+                if let Some(v) = line.strip_prefix("Content-Length:") {
+                    content_length = Some(v.trim().parse().unwrap());
                 }
-
-                break;
             }
+
+            break;
         }
     }
 

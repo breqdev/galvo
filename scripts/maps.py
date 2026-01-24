@@ -154,7 +154,7 @@ def save_polylines_txt(filename, polylines):
 if __name__ == "__main__":
     lat = 42.39625701047068
     lon = -71.10866957285928
-    side_meters = 1000
+    side_meters = 10000
 
     roads = fetch_osm_roads(lat, lon, side_meters)
 
