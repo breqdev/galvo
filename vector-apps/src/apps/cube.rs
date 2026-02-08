@@ -76,7 +76,7 @@ impl CubeDemo {
 
 impl VectorApp for CubeDemo {
     fn get_path(&mut self, frame: u64) -> &Path {
-        let color = (255, 0, 0);
+        let color = (0, 0, 255);
 
         let angle_x = frame as f32 * 0.02;
         let angle_y = frame as f32 * 0.03;

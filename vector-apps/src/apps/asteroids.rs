@@ -57,6 +57,10 @@ pub struct Asteroids {
     asteroids: Vec<Asteroid>,
     bullets: Vec<Bullet>,
     path: Path,
+    hit_bullets: Vec<bool>,
+    hit_asteroids: Vec<bool>,
+    new_asteroids: Vec<Asteroid>,
+    currently_shooting: bool,
 }
 
 impl Asteroids {
@@ -91,19 +95,23 @@ impl Asteroids {
             asteroids,
             bullets: Vec::new(),
             path: Vec::new(),
+            hit_asteroids: Vec::new(),
+            hit_bullets: Vec::new(),
+            new_asteroids: Vec::new(),
+            currently_shooting: false,
         }
     }
 
     fn step(&mut self, controls: Controls) {
         // handle controls
-        self.ship.rvel += controls.x as f32 * -0.002;
+        self.ship.rvel += controls.x as f32 * -0.02;
 
         let forward = Vec2 {
             x: libm::sinf(self.ship.rot),
             y: libm::cosf(self.ship.rot),
         };
 
-        self.ship.vel = (self.ship.vel * 0.9) + (forward * (controls.y as f32 * -0.001));
+        self.ship.vel = (self.ship.vel * 0.9) + (forward * (controls.y as f32 * 0.005));
 
         // rotate ship slowly
         self.ship.pos = (self.ship.pos + self.ship.vel).wrap();
@@ -116,11 +124,16 @@ impl Asteroids {
         }
 
         if controls.b {
-            self.bullets.push(Bullet {
-                pos: self.ship.pos,
-                vel: forward * 0.01,
-                ttl: 400,
-            });
+            if !self.currently_shooting {
+                self.bullets.push(Bullet {
+                    pos: self.ship.pos,
+                    vel: forward * 0.05,
+                    ttl: 25,
+                });
+            }
+            self.currently_shooting = true;
+        } else {
+            self.currently_shooting = false;
         }
 
         // move bullets
@@ -133,42 +146,64 @@ impl Asteroids {
         self.bullets.retain(|b| b.ttl > 0);
 
         // collision!
-        let mut new_asteroids = Vec::new();
+        self.hit_bullets.clear();
+        self.hit_bullets.resize(self.bullets.len(), false);
 
-        self.asteroids.retain(|a| {
-            let mut hit = false;
+        self.hit_asteroids.clear();
+        self.hit_asteroids.resize(self.asteroids.len(), false);
 
-            self.bullets.retain(|b| {
-                let r = a.size.radius();
-                if a.pos.distance(b.pos) < r * r {
-                    hit = true;
-                    false // remove bullet
-                } else {
-                    true
+        self.new_asteroids.clear();
+
+        for (ai, a) in self.asteroids.iter().enumerate() {
+            let r2 = libm::powf(a.size.radius(), 2.0);
+
+            for (bi, b) in self.bullets.iter().enumerate() {
+                if self.hit_bullets[bi] {
+                    continue;
                 }
-            });
 
-            if hit {
-                if let Some(next) = a.size.fragments() {
-                    for i in 0..2 {
-                        let angle = (i as f32) * 1.7;
-                        new_asteroids.push(Asteroid {
-                            pos: a.pos,
-                            vel: Vec2 {
-                                x: libm::cosf(angle) * 0.001,
-                                y: libm::sinf(angle) * 0.001,
-                            },
-                            size: next,
-                        });
+                if a.pos.distance_sq(b.pos) < r2 {
+                    self.hit_bullets[bi] = true;
+                    self.hit_asteroids[ai] = true;
+
+                    if let Some(next) = a.size.fragments() {
+                        for &angle in &[0.0, 1.7] {
+                            self.new_asteroids.push(Asteroid {
+                                pos: a.pos,
+                                vel: Vec2 {
+                                    x: libm::cosf(angle) * 0.01,
+                                    y: libm::sinf(angle) * 0.01,
+                                },
+                                size: next,
+                            });
+                        }
                     }
-                }
-                false // remove asteroid
-            } else {
-                true
-            }
-        });
 
-        self.asteroids.extend(new_asteroids);
+                    break;
+                }
+            }
+        }
+
+        let mut i = 0;
+        while i < self.bullets.len() {
+            if self.hit_bullets[i] {
+                self.bullets.swap_remove(i);
+                self.hit_bullets.swap_remove(i);
+            } else {
+                i += 1;
+            }
+        }
+
+        let mut i = 0;
+        while i < self.asteroids.len() {
+            if self.hit_asteroids[i] {
+                self.asteroids.swap_remove(i);
+                self.hit_asteroids.swap_remove(i);
+            } else {
+                i += 1;
+            }
+        }
+        self.asteroids.extend(self.new_asteroids.drain(..));
     }
 
     fn draw_circle(&mut self, center: Vec2, r: f32, color: (u8, u8, u8)) {
@@ -261,7 +296,7 @@ impl Asteroids {
                 let a = &self.asteroids[i];
                 (a.pos, a.size.radius())
             };
-            self.draw_circle(pos, radius, (255, 0, 0));
+            self.draw_circle(pos, radius, (0, 0, 255));
         }
 
         for b in &self.bullets {
@@ -274,8 +309,8 @@ impl Asteroids {
             self.path.push(Point {
                 x: to_u8(b.pos.x),
                 y: to_u8(b.pos.y),
-                color: (0, 0, 0),
-                delay: 100,
+                color: (0, 255, 0),
+                delay: 500,
             });
             self.path.push(Point {
                 x: to_u8(b.pos.x + b.vel.x),
@@ -298,11 +333,11 @@ impl Asteroids {
 
 impl VectorApp for Asteroids {
     fn get_path(&mut self, _frame: u64) -> &Path {
-        self.render();
         &self.path
     }
 
     fn handle_controls(&mut self, controls: Controls) {
         self.step(controls);
+        self.render();
     }
 }

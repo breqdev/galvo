@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "ESP32 Galvo Driver")(type "KiCad")(uri "${KIPRJMOD}/ESP32 Galvo Driver.kicad_sym")(options "")(descr ""))
+)

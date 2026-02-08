@@ -1,3 +1,5 @@
+use core::f32::consts::PI;
+
 use alloc::format;
 use jiff::Timestamp;
 use jiff::tz::TimeZone;
@@ -32,7 +34,11 @@ impl<T: TimeSource> Clock<T> {
 
 impl<T: TimeSource> VectorApp for Clock<T> {
     fn get_path(&mut self, frame: u64) -> &Path {
-        let color = ((libm::sinf(frame as f32 * 0.1) * 127.0 + 128.0) as u8, 0, 0);
+        let color = (
+            (libm::sinf(frame as f32 * 0.1) * 127.0 + 128.0) as u8,
+            (libm::sinf(frame as f32 * 0.1 + PI * (2.0 / 3.0)) * 127.0 + 128.0) as u8,
+            (libm::sinf(frame as f32 * 0.1 + PI * (4.0 / 3.0)) * 127.0 + 128.0) as u8,
+        );
 
         self.path.clear();
 

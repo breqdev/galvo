@@ -23,7 +23,7 @@ impl VectorApp for Cycle {
     }
 
     fn handle_controls(&mut self, controls: Controls) {
-        if controls.a {
+        if controls.b {
             self.idx += 1;
             self.idx %= self.apps.len();
         } else {

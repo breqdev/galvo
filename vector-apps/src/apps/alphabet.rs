@@ -27,7 +27,7 @@ impl AlphabetDemo {
                     32 + 32 * i as u8,
                     1.0,
                     1.0,
-                    |x| hsl_to_rgb(x * 0.005, 1.0, 0.5),
+                    |x| hsl_to_rgb(x * 0.001, 1.0, 0.5),
                     fonts::ROMANS,
                 )
             })

@@ -1,6 +1,5 @@
 import math
 import requests
-from shapely.geometry import LineString, box
 
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 
@@ -27,6 +26,8 @@ def fetch_osm_roads(lat, lon, side_meters):
     out geom;
     """
 
+    print(query)
+
     response = requests.post(OVERPASS_URL, data=query)
     response.raise_for_status()
     data = response.json()
@@ -41,108 +42,6 @@ def fetch_osm_roads(lat, lon, side_meters):
     return polylines
 
 
-def project_crop(polylines, lat0, lon0, side_meters):
-    lat0_rad = math.radians(lat0)
-    half_side = side_meters / 2
-    crop_rect = box(-half_side, -half_side, half_side, half_side)
-
-    clipped = []
-
-    for line in polylines:
-        if len(line) < 2:
-            continue
-        projected = [
-            ((lon - lon0) * math.cos(lat0_rad) * 111_320, (lat - lat0) * 111_320)
-            for lon, lat in line
-        ]
-        shapely_line = LineString(projected)
-        intersection = shapely_line.intersection(crop_rect)
-
-        if intersection.is_empty:
-            continue
-        if intersection.geom_type == "LineString":
-            clipped.append(list(intersection.coords))
-        elif intersection.geom_type == "MultiLineString":
-            for subline in intersection.geoms:
-                if len(subline.coords) >= 2:
-                    clipped.append(list(subline.coords))
-    return clipped
-
-
-def merge_connected_lines(lines, tol=1e-3):
-    """
-    Merge lines with matching endpoints within tolerance.
-    """
-    merged = []
-
-    while lines:
-        line = lines.pop(0)
-        changed = True
-        while changed:
-            changed = False
-            for i, other in enumerate(lines):
-                if math.dist(line[-1], other[0]) < tol:
-                    line.extend(other[1:])
-                    lines.pop(i)
-                    changed = True
-                    break
-                elif math.dist(line[-1], other[-1]) < tol:
-                    line.extend(reversed(other[:-1]))
-                    lines.pop(i)
-                    changed = True
-                    break
-                elif math.dist(line[0], other[-1]) < tol:
-                    line = other[:-1] + line
-                    lines.pop(i)
-                    changed = True
-                    break
-                elif math.dist(line[0], other[0]) < tol:
-                    line = list(reversed(other[1:])) + line
-                    lines.pop(i)
-                    changed = True
-                    break
-        merged.append(line)
-    return merged
-
-
-def greedy_order_lines(lines):
-    """
-    Reorder lines to reduce travel distance between disconnected segments.
-    """
-    if not lines:
-        return []
-
-    ordered = [lines.pop(0)]
-
-    while lines:
-        last_point = ordered[-1][-1]
-        best_idx = None
-        best_dist = float("inf")
-        reverse = False
-
-        for i, line in enumerate(lines):
-            dist_start = math.dist(last_point, line[0])
-            dist_end = math.dist(last_point, line[-1])
-
-            if dist_start < best_dist:
-                best_dist, best_idx, reverse = dist_start, i, False
-            if dist_end < best_dist:
-                best_dist, best_idx, reverse = dist_end, i, True
-
-        next_line = lines.pop(best_idx)
-        if reverse:
-            next_line.reverse()
-        ordered.append(next_line)
-
-    return ordered
-
-
-def normalize_lines(lines, side_meters):
-    half_side = side_meters / 2
-    normalized = [[(x / half_side, y / half_side) for x, y in line] for line in lines]
-    return normalized
-
-
 def save_polylines_txt(filename, polylines):
     with open(filename, "w") as f:
         for line in polylines:
@@ -155,6 +54,11 @@ if __name__ == "__main__":
     lat = 42.39625701047068
     lon = -71.10866957285928
     side_meters = 10000
+
+    # Davis Square (for demo only)
+    lat = 42.396521362143275
+    lon = -71.12230238395239
+    side_meters = 500
 
     roads = fetch_osm_roads(lat, lon, side_meters)
 

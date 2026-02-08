@@ -19,6 +19,12 @@ impl Vec2 {
         let dy = self.y - other.y;
         dx * dx + dy * dy
     }
+
+    pub fn distance_sq(self, other: Vec2) -> f32 {
+        let dx = self.x - other.x;
+        let dy = self.y - other.y;
+        dx * dx + dy * dy
+    }
 }
 
 impl Add for Vec2 {

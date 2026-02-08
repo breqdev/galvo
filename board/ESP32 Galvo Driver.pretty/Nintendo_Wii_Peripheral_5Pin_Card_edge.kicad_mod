@@ -1,0 +1,425 @@
+(footprint "Nintendo_Wii_Peripheral_5Pin_Card_edge"
+	(version 20241229)
+	(generator "pcbnew")
+	(generator_version "9.0")
+	(layer "F.Cu")
+	(descr "Nintendo Wii Nunchuck PCB connector, notch on front layer")
+	(tags "Nintendo Wii Nunchuck I2C PCB")
+	(property "Reference" "REF**"
+		(at -6.858 3.048 0)
+		(layer "F.SilkS")
+		(uuid "1c86fd74-f6f3-4d43-b452-f1d40e4e40b7")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Value" "Nintendo_Wii_Peripheral_5Pin_Card_edge"
+		(at 1.9 5 0)
+		(layer "F.Fab")
+		(uuid "2f0b846c-b085-4dab-8505-fa32aeb558c2")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" "https://gitlab.com/kicad/libraries/kicad-footprints/-/merge_requests/3351"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "84517917-f805-4f88-b431-6fcc1d87e04b")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" "Connector for Nintendo Wii Nunchuck"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "687383c6-fe43-4574-89c5-7079863d8a10")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr exclude_from_pos_files exclude_from_bom allow_soldermask_bridges)
+	(fp_poly
+		(pts
+			(xy 5.15 -3.75) (xy 5.15 3.5) (xy -1.35 3.5) (xy -1.35 -3.75)
+		)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill yes)
+		(layer "F.Mask")
+		(uuid "8f2be3b3-6ff1-4802-8117-eb2a71611c72")
+	)
+	(fp_poly
+		(pts
+			(xy 5.15 -3.75) (xy 5.15 3.5) (xy -1.35 3.5) (xy -1.35 -3.75)
+		)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill yes)
+		(layer "B.Mask")
+		(uuid "dcb056c9-867e-47ed-b830-4a26addf61c4")
+	)
+	(fp_line
+		(start -1.3 4.2)
+		(end 1 4.2)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(layer "F.SilkS")
+		(uuid "014777ed-4f6c-4600-ab74-6834975a0980")
+	)
+	(fp_line
+		(start 1 3.8)
+		(end 2.8 3.8)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(layer "F.SilkS")
+		(uuid "f0c725ef-bcb5-402f-8bc2-ebc71a44e1ba")
+	)
+	(fp_line
+		(start 1 4.2)
+		(end 1 3.8)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(layer "F.SilkS")
+		(uuid "579863aa-a61c-4054-b857-eabca4809987")
+	)
+	(fp_line
+		(start 2.8 3.8)
+		(end 2.8 4.2)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(layer "F.SilkS")
+		(uuid "c4fdbb92-7464-4057-bd8e-6fd289baa3e0")
+	)
+	(fp_line
+		(start 2.8 4.2)
+		(end 5.1 4.2)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(layer "F.SilkS")
+		(uuid "6d53c7c1-6fe1-4507-b658-07728310e4ae")
+	)
+	(fp_poly
+		(pts
+			(xy 0 3.775) (xy 0.34 4.245) (xy -0.34 4.245) (xy 0 3.775)
+		)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(fill yes)
+		(layer "B.SilkS")
+		(uuid "b73dc7bf-3127-4643-9901-532700ceb804")
+	)
+	(fp_line
+		(start -5.3878 0.7568)
+		(end -5.3878 -1.1482)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "Edge.Cuts")
+		(uuid "348499dc-31f5-45a1-9684-fb928ab48288")
+	)
+	(fp_line
+		(start -4.2378 -1.1482)
+		(end -5.3878 -1.1482)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "Edge.Cuts")
+		(uuid "92019b51-819f-4b80-a5f2-971a082be926")
+	)
+	(fp_line
+		(start -4.2378 -1.1482)
+		(end -4.2378 -4.5432)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "Edge.Cuts")
+		(uuid "ce36c3af-1811-43d8-ab16-5a905c553d84")
+	)
+	(fp_line
+		(start -4.2378 0.7568)
+		(end -5.3878 0.7568)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "Edge.Cuts")
+		(uuid "aa527152-438d-42ea-9154-19d17cb59884")
+	)
+	(fp_line
+		(start -4.2378 3.5)
+		(end -4.2378 0.7568)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "Edge.Cuts")
+		(uuid "01de0805-7bc5-43d7-bc15-e9bf1ee8d252")
+	)
+	(fp_line
+		(start -1.35 -3.75)
+		(end 5.15 -3.75)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "Edge.Cuts")
+		(uuid "c1373906-42b8-4284-a21e-42f37fedb7a1")
+	)
+	(fp_line
+		(start -1.35 3.5)
+		(end -4.2378 3.5)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "Edge.Cuts")
+		(uuid "75adff79-234c-4477-b2e2-0f238c838f4c")
+	)
+	(fp_line
+		(start -1.35 3.5)
+		(end -1.35 -3.75)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "Edge.Cuts")
+		(uuid "b8302901-83d4-418c-bd6d-671a2563f6a4")
+	)
+	(fp_line
+		(start 5.15 -3.75)
+		(end 5.15 3.5)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "Edge.Cuts")
+		(uuid "0cdadeb7-e509-42ac-aab4-a59c91dbadfb")
+	)
+	(fp_line
+		(start 5.15 3.5)
+		(end 8.0378 3.5)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "Edge.Cuts")
+		(uuid "bea44865-b5ec-40ff-a08b-39e14ebe0ab8")
+	)
+	(fp_line
+		(start 8.0378 -1.1482)
+		(end 8.0378 -4.5432)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "Edge.Cuts")
+		(uuid "21be1922-251f-444f-84ac-1d57ca653a6d")
+	)
+	(fp_line
+		(start 8.0378 -1.1482)
+		(end 9.1878 -1.1482)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "Edge.Cuts")
+		(uuid "7271f6ac-7b1b-4c04-b20f-34ed8133cc0c")
+	)
+	(fp_line
+		(start 8.0378 0.7568)
+		(end 9.1878 0.7568)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "Edge.Cuts")
+		(uuid "dfdae003-3fdf-4738-8b29-b1a26edef39c")
+	)
+	(fp_line
+		(start 8.0378 3.5)
+		(end 8.0378 0.7568)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "Edge.Cuts")
+		(uuid "924944e2-1db8-4c0b-a0c2-8977752670bc")
+	)
+	(fp_line
+		(start 9.1878 0.7568)
+		(end 9.1878 -1.1482)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "Edge.Cuts")
+		(uuid "fbdd0f1b-75c1-453b-8aa9-8b6a4d1c64b9")
+	)
+	(fp_rect
+		(start -5.59 -4.9)
+		(end 9.69 4)
+		(stroke
+			(width 0.05)
+			(type default)
+		)
+		(fill no)
+		(layer "F.CrtYd")
+		(uuid "e37e35ca-3edf-4847-a747-bcaefb50c071")
+	)
+	(fp_line
+		(start 0 -3.75)
+		(end -0.5 -3.25)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(layer "B.Fab")
+		(uuid "658280b9-8dee-4f7d-8218-3216f4661abd")
+	)
+	(fp_line
+		(start 0.5 -3.25)
+		(end 0 -3.75)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(layer "B.Fab")
+		(uuid "013d8cdb-d40f-4cbe-9bff-1e026f805c8f")
+	)
+	(fp_text user "between pins 2 & 6"
+		(at 1.9 -6.35 0)
+		(unlocked yes)
+		(layer "Cmts.User")
+		(uuid "34aceee6-5b03-45a7-a36a-c21a65df104a")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+			(justify bottom)
+		)
+	)
+	(fp_text user "Socket notch"
+		(at 1.9 -8.636 0)
+		(unlocked yes)
+		(layer "Cmts.User")
+		(uuid "e3d7d632-16c3-465e-9af6-1a0406eab9f8")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+			(justify bottom)
+		)
+	)
+	(fp_text user "${REFERENCE}"
+		(at 1.9 -1.2 0)
+		(layer "F.Fab")
+		(uuid "84182b5a-bbb4-43af-95aa-24f4e9fe1575")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+			(justify bottom)
+		)
+	)
+	(pad "1" connect rect
+		(at 0 0)
+		(size 1.27 7)
+		(layers "F.Mask" "B.Cu")
+		(uuid "e2d26b74-dd63-4400-8316-52bb32a25df4")
+	)
+	(pad "2" connect rect
+		(at 0 0)
+		(size 1.27 7)
+		(layers "F.Cu" "F.Mask")
+		(uuid "22e3aa78-cbda-4a31-aca4-6c458895b5ce")
+	)
+	(pad "3" connect rect
+		(at 1.905 0)
+		(size 1.27 7)
+		(layers "F.Mask" "B.Cu")
+		(uuid "ac6973bf-fcf3-40ff-a17c-24ff3ff6f0cd")
+	)
+	(pad "5" connect rect
+		(at 3.81 0)
+		(size 1.27 7)
+		(layers "F.Mask" "B.Cu")
+		(uuid "402323d6-e56d-47cc-b052-de249a164c7e")
+	)
+	(pad "6" connect rect
+		(at 3.81 0)
+		(size 1.27 7)
+		(layers "F.Cu" "F.Mask")
+		(uuid "59e31262-1dbb-43fd-8597-022de8481368")
+	)
+	(zone
+		(net 0)
+		(net_name "")
+		(layer "F.Cu")
+		(uuid "6340906c-9dab-4df2-9fa9-f19bde01a431")
+		(hatch edge 0.5)
+		(connect_pads
+			(clearance 0)
+		)
+		(min_thickness 0.25)
+		(filled_areas_thickness no)
+		(keepout
+			(tracks not_allowed)
+			(vias not_allowed)
+			(pads not_allowed)
+			(copperpour not_allowed)
+			(footprints allowed)
+		)
+		(placement
+			(enabled no)
+			(sheetname "")
+		)
+		(fill
+			(thermal_gap 0.5)
+			(thermal_bridge_width 0.5)
+		)
+		(polygon
+			(pts
+				(xy 1 4) (xy 1 -3.8) (xy 2.8 -3.8) (xy 2.8 4)
+			)
+		)
+	)
+	(embedded_fonts no)
+)

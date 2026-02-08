@@ -7,6 +7,7 @@
 )]
 
 use alloc::boxed::Box;
+use alloc::string::String;
 use alloc::vec::Vec;
 use embassy_executor::Spawner;
 use embassy_net::{DhcpConfig, StackResources};
@@ -25,6 +26,7 @@ use esp_radio::Controller;
 use galvo_driver::network::{
     RtcTimeSource, SharedRtc, connection, get_mastodon_status, get_time_ntp, net_task,
 };
+use galvo_driver::nunchuck::Nunchuck;
 use galvo_driver::protocol::{Command, Response};
 use usb_device::prelude::{UsbDeviceBuilder, UsbVidPid};
 use usbd_serial::{SerialPort, USB_CLASS_CDC};
@@ -78,7 +80,10 @@ async fn main(spawner: Spawner) -> ! {
 
     let delay = Delay::new();
 
-    let mut indicator = IndicatorLed::new(peripherals.GPIO38, peripherals.RMT, peripherals.GPIO39);
+    // Adafruit QtPy
+    // let mut indicator = IndicatorLed::new(peripherals.GPIO38, peripherals.RMT, peripherals.GPIO39);
+    // TinyS2
+    let mut indicator = IndicatorLed::new(peripherals.GPIO2, peripherals.RMT, peripherals.GPIO1);
     indicator.set_color(smart_leds::colors::RED);
 
     let ledc = Ledc::new(peripherals.LEDC);
@@ -92,9 +97,9 @@ async fn main(spawner: Spawner) -> ! {
         .unwrap();
 
     let mut lasers = Lasers::new(
-        peripherals.GPIO9,
-        peripherals.GPIO8,
-        peripherals.GPIO7,
+        peripherals.GPIO4,
+        peripherals.GPIO5,
+        peripherals.GPIO6,
         ledc,
         &timer,
         peripherals.DAC2,
@@ -102,6 +107,8 @@ async fn main(spawner: Spawner) -> ! {
         peripherals.DAC1,
         peripherals.GPIO17,
     );
+
+    let mut nunchuck = Nunchuck::new(peripherals.I2C0, peripherals.GPIO8, peripherals.GPIO9);
 
     let usb = Usb::new(peripherals.USB0, peripherals.GPIO20, peripherals.GPIO19);
     let usb_bus = UsbBus::new(usb, unsafe { &mut *core::ptr::addr_of_mut!(EP_MEMORY) });
@@ -145,23 +152,24 @@ async fn main(spawner: Spawner) -> ! {
 
     get_time_ntp(&stack, rtc).await;
 
-    let post = get_mastodon_status(&stack).await;
-
-    indicator.set_color(smart_leds::colors::GREEN);
+    // let post = get_mastodon_status(&stack).await;
 
     let mut serial_buffer: [u8; 2048] = [0; 2048];
     let mut serial_rx_length: usize = 0;
 
     let mut apps: Vec<Box<dyn VectorApp>> = Vec::with_capacity(5);
-    apps.push(Box::new(AlphabetDemo::new(post)));
-    apps.push(Box::new(CubeDemo::new()));
-    apps.push(Box::new(Asteroids::new()));
+    // apps.push(Box::new(AlphabetDemo::new(String::from("ABCDEFGH"))));
+    // apps.push(Box::new(CubeDemo::new()));
+    // apps.push(Box::new(Asteroids::new()));
     apps.push(Box::new(Maps::new()));
-    apps.push(Box::new(Clock::new(RtcTimeSource::new(rtc))));
+    // apps.push(Box::new(Clock::new(RtcTimeSource::new(rtc))));
 
     let mut active_demo: Box<dyn apps::VectorApp> = Box::new(Cycle::new(apps));
+    // let mut active_demo: Box<dyn apps::VectorApp> = Box::new(Asteroids::new());
 
     let mut frameno: u64 = 0;
+
+    indicator.set_color(smart_leds::colors::GREEN);
 
     loop {
         if usb_dev.poll(&mut [&mut serial]) {
@@ -205,6 +213,12 @@ async fn main(spawner: Spawner) -> ! {
                     serial_rx_length = remaining;
                 }
             }
+        }
+
+        if frameno % 4 == 0 {
+            let controls = nunchuck.get_input();
+            // info!("controls state: {:?}", controls);
+            active_demo.handle_controls(controls);
         }
 
         frameno += 1;

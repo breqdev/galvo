@@ -7,6 +7,7 @@ pub mod cube;
 pub mod cycle;
 pub mod maps;
 
+#[derive(Clone, Copy, Debug, Default)]
 pub struct Controls {
     /// The X-axis (horizontal) control.
     pub x: i8,

@@ -270,7 +270,7 @@ impl Maps {
     fn generate_path(&mut self) {
         self.path.clear();
 
-        let raw = include_str!("roads.txt");
+        let raw = include_str!("roads-small.txt");
         let latlon = parse_latlon_file(raw);
 
         let mut lines = project_and_crop(&latlon, self.lat, self.lon, SIDE_METERS);
@@ -302,7 +302,7 @@ impl Maps {
                             libm::sqrtf(dx * dx + dy * dy) as u16
                         }
                         None => 1000,
-                    };
+                    } + 500;
 
                     // Pen-up move
                     self.path.push(Point {
@@ -317,7 +317,7 @@ impl Maps {
                         x,
                         y,
                         color: (255, 0, 0),
-                        delay: 1,
+                        delay: 100,
                     });
 
                     prev = Some((x, y));
@@ -339,7 +339,7 @@ impl Maps {
                             x: ix,
                             y: iy,
                             color: (255, 0, 0),
-                            delay: 1,
+                            delay: 10,
                         });
                     }
 
@@ -355,6 +355,13 @@ impl Maps {
                 }
             }
         }
+
+        self.path.push(Point {
+            x: 0,
+            y: 0,
+            color: (0, 0, 0),
+            delay: 1,
+        });
     }
 }
 impl VectorApp for Maps {
@@ -365,8 +372,8 @@ impl VectorApp for Maps {
     fn handle_controls(&mut self, controls: Controls) {
         let cos_lat = libm::cosf(self.lat.to_radians());
 
-        self.lat += controls.y as f32 * 10.0 / METERS_PER_DEG;
-        self.lon += controls.x as f32 * 10.0 / (METERS_PER_DEG * cos_lat);
+        self.lat += controls.y as f32 * 50.0 / METERS_PER_DEG;
+        self.lon += controls.x as f32 * 50.0 / (METERS_PER_DEG * cos_lat);
 
         self.generate_path();
     }
