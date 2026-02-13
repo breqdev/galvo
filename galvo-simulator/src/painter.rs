@@ -12,6 +12,7 @@ use vector_apps::{
         clock::{Clock, TimeSource},
         cube::CubeDemo,
         cycle::Cycle,
+        ilda::Ilda,
         maps::Maps,
     },
     point::Point,
@@ -32,7 +33,8 @@ pub fn painter(tx: Sender<Point>, rx: Receiver<Controls>) {
         // Box::new(AlphabetDemo::new("Hello World!".to_string())),
         // Box::new(CubeDemo::new()),
         // Box::new(Asteroids::new()),
-        Box::new(Maps::new()),
+        // Box::new(Maps::new()),
+        Box::new(Ilda::new()),
         // Box::new(Clock::new(SystemTimeSource)),
     ]);
 

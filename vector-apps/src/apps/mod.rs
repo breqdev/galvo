@@ -5,6 +5,7 @@ pub mod asteroids;
 pub mod clock;
 pub mod cube;
 pub mod cycle;
+pub mod ilda;
 pub mod maps;
 
 #[derive(Clone, Copy, Debug, Default)]
