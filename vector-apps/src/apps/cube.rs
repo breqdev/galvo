@@ -3,7 +3,7 @@ use crate::{
     utils::text::text_to_path,
 };
 use alloc::vec::Vec;
-use hershey_text::fonts;
+// use hershey_text::fonts;
 
 use crate::apps::VectorApp;
 
@@ -55,7 +55,7 @@ impl CubeDemo {
             1.0,
             1.0,
             (255, 0, 0),
-            fonts::ROMANS,
+            // fonts::ROMANS,
         ));
         static_points.append(&mut text_to_path(
             "World",
@@ -64,7 +64,7 @@ impl CubeDemo {
             1.0,
             1.0,
             (255, 0, 0),
-            fonts::ROMANS,
+            // fonts::ROMANS,
         ));
 
         Self {

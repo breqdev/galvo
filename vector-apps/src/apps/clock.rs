@@ -5,7 +5,7 @@ use jiff::Timestamp;
 use jiff::tz::TimeZone;
 
 use alloc::vec::Vec;
-use hershey_text::fonts;
+// use hershey_text::fonts;
 
 use crate::{
     apps::VectorApp,
@@ -63,7 +63,7 @@ impl<T: TimeSource> VectorApp for Clock<T> {
             1.5,
             1.5,
             color,
-            fonts::ROMANS,
+            // fonts::ROMANS,
         ));
 
         // Date (YYYY-MM-DD)

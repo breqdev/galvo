@@ -2,7 +2,6 @@ use core::str;
 
 use alloc::{
     collections::btree_map::BTreeMap,
-    format,
     string::{String, ToString},
     vec::Vec,
 };

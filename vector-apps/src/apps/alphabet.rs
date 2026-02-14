@@ -1,5 +1,5 @@
 use alloc::{string::String, vec::Vec};
-use hershey_text::fonts;
+// use hershey_text::fonts;
 use itertools::Itertools;
 
 use crate::{
@@ -28,7 +28,7 @@ impl AlphabetDemo {
                     1.0,
                     1.0,
                     |x| hsl_to_rgb(x * 0.001, 1.0, 0.5),
-                    fonts::ROMANS,
+                    // fonts::ROMANS,
                 )
             })
             .collect();
