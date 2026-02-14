@@ -208,7 +208,7 @@ impl<'a> Parser<'a> {
 
         Point {
             x: ((x as i32 + 32768) >> 8) as u8,
-            y: ((-y as i32 + 32768) >> 8) as u8,
+            y: 255 - ((y as i32 + 32768) >> 8) as u8,
             color: if status & BLANKING_BIT == 0 {
                 *self.palette.get(color_idx).unwrap_or(&(0, 0, 0))
             } else {
@@ -226,7 +226,7 @@ impl<'a> Parser<'a> {
 
         Point {
             x: ((x as i32 + 32768) >> 8) as u8,
-            y: ((-y as i32 + 32768) >> 8) as u8,
+            y: 255 - ((y as i32 + 32768) >> 8) as u8,
             color: if status & BLANKING_BIT == 0 {
                 *self.palette.get(color_idx).unwrap_or(&(0, 0, 0))
             } else {
@@ -251,7 +251,7 @@ impl<'a> Parser<'a> {
 
         Point {
             x: ((x as i32 + 32768) >> 8) as u8,
-            y: -((y as i32 + 32768) >> 8) as u8,
+            y: 255 - ((y as i32 + 32768) >> 8) as u8,
             color: if status & BLANKING_BIT == 0 {
                 (red, green, blue)
             } else {
@@ -271,7 +271,7 @@ impl<'a> Parser<'a> {
 
         Point {
             x: ((x as i32 + 32768) >> 8) as u8,
-            y: ((-y as i32 + 32768) >> 8) as u8,
+            y: 255 - ((y as i32 + 32768) >> 8) as u8,
             color: if status & BLANKING_BIT == 0 {
                 (red, green, blue)
             } else {
