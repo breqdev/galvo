@@ -30,11 +30,11 @@ impl TimeSource for SystemTimeSource {
 
 pub fn painter(tx: Sender<Point>, rx: Receiver<Controls>) {
     let mut app = Cycle::new(vec![
-        Box::new(AlphabetDemo::new("ABCDEF".to_string())),
+        // Box::new(AlphabetDemo::new("NewStroke".to_string())),
         // Box::new(CubeDemo::new()),
         // Box::new(Asteroids::new()),
         // Box::new(Maps::new()),
-        // Box::new(Ilda::new()),
+        Box::new(Ilda::new()),
         // Box::new(Clock::new(SystemTimeSource)),
     ]);
 

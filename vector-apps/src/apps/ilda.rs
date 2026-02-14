@@ -10,9 +10,11 @@ pub struct Ilda {
     points: Vec<Point>,
 }
 
+const ILDA_KPPS: u8 = 12;
+
 impl Ilda {
     pub fn new() -> Self {
-        let paths = read_ilda(include_bytes!("ildatest.ild"));
+        let paths = read_ilda(include_bytes!("ildatest.ild"), ILDA_KPPS);
         let points = paths.get("ILDA Tes").unwrap().to_vec();
 
         Self { points }

@@ -160,14 +160,19 @@ pub const ILDA_DEFAULT_PALETTE: [(u8, u8, u8); 64] = [
 struct Parser<'a> {
     cur: Cursor<'a>,
     palette: Vec<(u8, u8, u8)>,
+    delay: u16,
 }
 
 impl<'a> Parser<'a> {
-    fn new(data: &'a [u8]) -> Self {
+    fn new(data: &'a [u8], kpps: u8) -> Self {
         let cur = Cursor::new(data);
+
+        let delay = (1000.0 / kpps as f32) as u16;
+
         Parser {
             cur,
             palette: ILDA_DEFAULT_PALETTE.to_vec(),
+            delay,
         }
     }
 
@@ -209,7 +214,7 @@ impl<'a> Parser<'a> {
             } else {
                 (0, 0, 0)
             },
-            delay: 1,
+            delay: self.delay,
         }
     }
 
@@ -227,7 +232,7 @@ impl<'a> Parser<'a> {
             } else {
                 (0, 0, 0)
             },
-            delay: 1,
+            delay: self.delay,
         }
     }
 
@@ -246,13 +251,13 @@ impl<'a> Parser<'a> {
 
         Point {
             x: ((x as i32 + 32768) >> 8) as u8,
-            y: ((-y as i32 + 32768) >> 8) as u8,
+            y: -((y as i32 + 32768) >> 8) as u8,
             color: if status & BLANKING_BIT == 0 {
                 (red, green, blue)
             } else {
                 (0, 0, 0)
             },
-            delay: 1,
+            delay: self.delay,
         }
     }
 
@@ -272,7 +277,7 @@ impl<'a> Parser<'a> {
             } else {
                 (0, 0, 0)
             },
-            delay: 1,
+            delay: self.delay,
         }
     }
 
@@ -327,7 +332,7 @@ impl<'a> Parser<'a> {
     }
 }
 
-pub fn read_ilda(source: &[u8]) -> BTreeMap<String, Path> {
-    let mut parser = Parser::new(source);
+pub fn read_ilda(source: &[u8], kpps: u8) -> BTreeMap<String, Path> {
+    let mut parser = Parser::new(source, kpps);
     parser.parse_file()
 }
