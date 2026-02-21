@@ -148,6 +148,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
 
 [[package]]
+name = "chr-text"
+version = "0.1.0"
+
+[[package]]
 name = "cipher"
 version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2024,6 +2028,7 @@ checksum = "77439c1b53d2303b20d9459b1ade71a83c716e3f9c34f3228c00e6f185d6c002"
 name = "vector-apps"
 version = "0.1.0"
 dependencies = [
+ "chr-text",
  "hershey-text",
  "itertools",
  "jiff",

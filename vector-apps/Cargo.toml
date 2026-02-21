@@ -7,5 +7,6 @@ edition = "2024"
 libm = "0.2.15"
 hershey-text ={ path = "../hershey-text" }
 newstroke-text ={ path = "../newstroke-text" }
+chr-text ={ path = "../chr-text" }
 jiff = { version = "0.2.10", default-features = false, features = ["static"] }
 itertools = {version = "0.14.0", default-features = false, features = ["use_alloc"]}

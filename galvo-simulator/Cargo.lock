@@ -587,6 +587,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "chr-text"
+version = "0.1.0"
+
+[[package]]
 name = "clipboard-win"
 version = "5.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2970,6 +2974,7 @@ dependencies = [
 name = "vector-apps"
 version = "0.1.0"
 dependencies = [
+ "chr-text",
  "hershey-text",
  "itertools",
  "jiff",

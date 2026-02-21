@@ -38,10 +38,12 @@ use log::info;
 use embassy_sync::blocking_mutex::Mutex;
 use galvo_driver::lasers::Lasers;
 use galvo_driver::led::IndicatorLed;
+use vector_apps::apps::align::Align;
 use vector_apps::apps::alphabet::AlphabetDemo;
 use vector_apps::apps::asteroids::Asteroids;
 use vector_apps::apps::cube::CubeDemo;
 use vector_apps::apps::cycle::Cycle;
+use vector_apps::apps::ilda::Ilda;
 use vector_apps::apps::maps::Maps;
 
 extern crate alloc;
@@ -158,11 +160,13 @@ async fn main(spawner: Spawner) -> ! {
     let mut serial_rx_length: usize = 0;
 
     let mut apps: Vec<Box<dyn VectorApp>> = Vec::with_capacity(5);
-    // apps.push(Box::new(AlphabetDemo::new(String::from("ABCDEFGH"))));
-    // apps.push(Box::new(CubeDemo::new()));
-    // apps.push(Box::new(Asteroids::new()));
+    apps.push(Box::new(AlphabetDemo::new(String::from("ABCDEFGH"))));
+    apps.push(Box::new(CubeDemo::new()));
+    apps.push(Box::new(Asteroids::new()));
     apps.push(Box::new(Maps::new()));
-    // apps.push(Box::new(Clock::new(RtcTimeSource::new(rtc))));
+    apps.push(Box::new(Ilda::new()));
+    // apps.push(Box::new(Align::new()));
+    apps.push(Box::new(Clock::new(RtcTimeSource::new(rtc))));
 
     let mut active_demo: Box<dyn apps::VectorApp> = Box::new(Cycle::new(apps));
     // let mut active_demo: Box<dyn apps::VectorApp> = Box::new(Asteroids::new());

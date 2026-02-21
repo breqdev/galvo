@@ -8392,6 +8392,16 @@
 	)
 	(wire
 		(pts
+			(xy 304.8 69.85) (xy 304.8 72.39)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "17bc6fd9-78d8-4428-9c30-747b4c25f1ec")
+	)
+	(wire
+		(pts
 			(xy 429.26 231.14) (xy 429.26 233.68)
 		)
 		(stroke
@@ -8469,6 +8479,16 @@
 			(type default)
 		)
 		(uuid "1f37cb9b-cc0e-4a8f-9e67-43c4ea3b42d6")
+	)
+	(wire
+		(pts
+			(xy 293.37 59.69) (xy 293.37 62.23)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "20042ad3-fc51-4405-a9bf-3f2f050feb19")
 	)
 	(wire
 		(pts
@@ -9542,7 +9562,7 @@
 	)
 	(polyline
 		(pts
-			(xy 297.815 35.56) (xy 297.815 144.145)
+			(xy 314.325 35.56) (xy 314.325 144.145)
 		)
 		(stroke
 			(width 0)
@@ -10162,6 +10182,16 @@
 	)
 	(wire
 		(pts
+			(xy 293.37 69.85) (xy 293.37 72.39)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "874737d8-ad92-4eef-b042-0c6149db8ee0")
+	)
+	(wire
+		(pts
 			(xy 191.77 251.46) (xy 191.77 256.54)
 		)
 		(stroke
@@ -10699,6 +10729,16 @@
 			(type default)
 		)
 		(uuid "a4b7416a-ef01-4537-9331-64f83331828b")
+	)
+	(wire
+		(pts
+			(xy 304.8 59.69) (xy 304.8 62.23)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a4bbbbea-0b5e-48dc-a453-de071f820148")
 	)
 	(wire
 		(pts
@@ -15736,6 +15776,138 @@
 	)
 	(symbol
 		(lib_id "power:GND")
+		(at 293.37 72.39 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "3c426720-4057-46d1-a58c-42d67fa06893")
+		(property "Reference" "#PWR074"
+			(at 293.37 78.74 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 293.37 77.47 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 293.37 72.39 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 293.37 72.39 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 293.37 72.39 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "88586a92-c225-4441-a25e-c2251e574e3e")
+		)
+		(instances
+			(project "ESP32 Galvo Driver"
+				(path "/aba4a338-5902-4a2f-920e-af1dcbff9ba3"
+					(reference "#PWR074")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3.3V")
+		(at 293.37 59.69 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "3c9c1e59-76aa-4950-99b9-ac6a2781b5bc")
+		(property "Reference" "#PWR073"
+			(at 293.37 63.5 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3.3V"
+			(at 293.37 54.61 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 293.37 59.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 293.37 59.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
+			(at 293.37 59.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "e36679e4-0fd4-4830-b89e-c631951a3d30")
+		)
+		(instances
+			(project "ESP32 Galvo Driver"
+				(path "/aba4a338-5902-4a2f-920e-af1dcbff9ba3"
+					(reference "#PWR073")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
 		(at 285.75 398.78 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -16196,6 +16368,72 @@
 			(project ""
 				(path "/aba4a338-5902-4a2f-920e-af1dcbff9ba3"
 					(reference "R3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3.3V")
+		(at 304.8 59.69 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "4df7163f-bcec-42b8-b72e-2b35dfcfd1f4")
+		(property "Reference" "#PWR075"
+			(at 304.8 63.5 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3.3V"
+			(at 304.8 54.61 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 304.8 59.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 304.8 59.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
+			(at 304.8 59.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "ab6cd2b5-ae29-4fa2-9d65-ce5b6ec3f18e")
+		)
+		(instances
+			(project "ESP32 Galvo Driver"
+				(path "/aba4a338-5902-4a2f-920e-af1dcbff9ba3"
+					(reference "#PWR075")
 					(unit 1)
 				)
 			)
@@ -20179,6 +20417,76 @@
 		)
 	)
 	(symbol
+		(lib_id "Device:C")
+		(at 304.8 66.04 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "9f606856-573a-479b-bb0f-13f005e6a825")
+		(property "Reference" "C11"
+			(at 308.61 64.7699 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "0.1uF"
+			(at 308.61 67.3099 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+			(at 305.7652 69.85 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 304.8 66.04 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Unpolarized capacitor"
+			(at 304.8 66.04 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "641d8624-74e8-4abe-a1dd-3cb3c17aeefa")
+		)
+		(pin "1"
+			(uuid "b330e898-f2b9-4c3b-8da5-0ff59339900b")
+		)
+		(instances
+			(project "ESP32 Galvo Driver"
+				(path "/aba4a338-5902-4a2f-920e-af1dcbff9ba3"
+					(reference "C11")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Jumper:SolderJumper_3_Bridged12")
 		(at 245.11 102.87 270)
 		(mirror x)
@@ -22834,6 +23142,76 @@
 		)
 	)
 	(symbol
+		(lib_id "Device:C")
+		(at 293.37 66.04 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "d91abe49-814a-4483-8afe-b6c3726c5549")
+		(property "Reference" "C10"
+			(at 297.18 64.7699 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "10uF"
+			(at 297.18 67.3099 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+			(at 294.3352 69.85 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 293.37 66.04 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Unpolarized capacitor"
+			(at 293.37 66.04 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "c767badc-42d0-480c-9df3-e50c1eb2982b")
+		)
+		(pin "1"
+			(uuid "5ef97542-e968-4a3f-a8f2-5b3c31e05ef2")
+		)
+		(instances
+			(project "ESP32 Galvo Driver"
+				(path "/aba4a338-5902-4a2f-920e-af1dcbff9ba3"
+					(reference "C10")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "power:GND")
 		(at 358.14 140.97 0)
 		(unit 1)
@@ -23843,6 +24221,72 @@
 			(project ""
 				(path "/aba4a338-5902-4a2f-920e-af1dcbff9ba3"
 					(reference "U4")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 304.8 72.39 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "f4d1f334-56f8-42fc-971f-36721b134b9b")
+		(property "Reference" "#PWR076"
+			(at 304.8 78.74 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 304.8 77.47 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 304.8 72.39 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 304.8 72.39 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 304.8 72.39 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "2cdf7371-a952-41a8-94a0-a5d92048744e")
+		)
+		(instances
+			(project "ESP32 Galvo Driver"
+				(path "/aba4a338-5902-4a2f-920e-af1dcbff9ba3"
+					(reference "#PWR076")
 					(unit 1)
 				)
 			)

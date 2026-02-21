@@ -16,7 +16,7 @@ fn generate_rust(font: &[Option<Glyph>]) -> String {
     // Write the symbol table
     out.push_str(&format!(
         "static NEWSTROKE_FONT: [Option<Glyph>; {}] = [\n",
-        NUM_GLYPHS
+        font.len()
     ));
 
     for glyph in font {
@@ -190,7 +190,7 @@ pub fn parse_lib_file(input: &str) -> Result<HashMap<String, RawGlyph>, String> 
                         // S always means right
                         glyph.right = ax;
                     }
-                    _ => {},
+                    _ => {}
                 }
             }
 
@@ -451,7 +451,6 @@ fn parse_charlist(input: &str, font: &HashMap<String, RawGlyph>) -> FontFile {
                 codepoint += 1;
             }
 
-
             "+(" => {
                 // opening group (?)
                 eprintln!("unsupported + form at line {}: {}", lineno + 1, line);
@@ -462,7 +461,6 @@ fn parse_charlist(input: &str, font: &HashMap<String, RawGlyph>) -> FontFile {
                 // continuing/closing group (?)
                 eprintln!("unsupported + form at line {}: {}", lineno + 1, line);
             }
-
 
             "//" => {
                 // ignore, this is a comment
@@ -486,11 +484,13 @@ fn parse_charlist(input: &str, font: &HashMap<String, RawGlyph>) -> FontFile {
 }
 
 fn main() {
-    let mut symbols = parse_lib_file(&fs::read_to_string("data/font.lib").unwrap()).unwrap();
-    symbols.extend(parse_lib_file(&fs::read_to_string("data/symbol.lib").unwrap()).unwrap());
-    symbols.extend(parse_lib_file(&fs::read_to_string("data/CKJ.lib").unwrap()).unwrap());
+    // let mut symbols = parse_lib_file(&fs::read_to_string("data/font.lib").unwrap()).unwrap();
+    // symbols.extend(parse_lib_file(&fs::read_to_string("data/symbol.lib").unwrap()).unwrap());
+    // symbols.extend(parse_lib_file(&fs::read_to_string("data/CKJ.lib").unwrap()).unwrap());
 
-    let glyphs = parse_charlist(&fs::read_to_string("data/charlist.txt").unwrap(), &symbols);
+    // let glyphs = parse_charlist(&fs::read_to_string("data/charlist.txt").unwrap(), &symbols);
+
+    let glyphs = Vec::new();
 
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
     let out_file = out_dir.join("newstroke_font.rs");

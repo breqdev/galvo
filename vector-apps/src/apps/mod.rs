@@ -1,5 +1,6 @@
 use crate::point::Path;
 
+pub mod align;
 pub mod alphabet;
 pub mod asteroids;
 pub mod clock;
@@ -7,6 +8,7 @@ pub mod cube;
 pub mod cycle;
 pub mod ilda;
 pub mod maps;
+pub mod mbta;
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Controls {
