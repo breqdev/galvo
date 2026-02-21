@@ -7,7 +7,7 @@ struct PackedPoint {
     pub pen: bool,
 }
 
-const NUM_GLYPHS: usize = 0xA000; // U+0000 to U+9FFF
+const NUM_GLYPHS: usize = 0x27FF;
 type FontFile = [Option<Glyph>; NUM_GLYPHS];
 
 fn generate_rust(font: &[Option<Glyph>]) -> String {
@@ -484,13 +484,10 @@ fn parse_charlist(input: &str, font: &HashMap<String, RawGlyph>) -> FontFile {
 }
 
 fn main() {
-    // let mut symbols = parse_lib_file(&fs::read_to_string("data/font.lib").unwrap()).unwrap();
-    // symbols.extend(parse_lib_file(&fs::read_to_string("data/symbol.lib").unwrap()).unwrap());
-    // symbols.extend(parse_lib_file(&fs::read_to_string("data/CKJ.lib").unwrap()).unwrap());
+    let mut symbols = parse_lib_file(&fs::read_to_string("data/font.lib").unwrap()).unwrap();
+    symbols.extend(parse_lib_file(&fs::read_to_string("data/symbol.lib").unwrap()).unwrap());
 
-    // let glyphs = parse_charlist(&fs::read_to_string("data/charlist.txt").unwrap(), &symbols);
-
-    let glyphs = Vec::new();
+    let glyphs = parse_charlist(&fs::read_to_string("data/charlist.txt").unwrap(), &symbols);
 
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
     let out_file = out_dir.join("newstroke_font.rs");
