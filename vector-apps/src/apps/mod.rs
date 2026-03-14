@@ -25,6 +25,17 @@ pub struct Controls {
     pub b: bool,
 }
 
+impl Controls {
+    pub fn merge(self, other: Controls) -> Controls {
+        Controls {
+            x: (self.x as i16 + other.x as i16).clamp(-127, 127) as i8,
+            y: (self.y as i16 + other.y as i16).clamp(-127, 127) as i8,
+            a: self.a || other.a,
+            b: self.b || other.b,
+        }
+    }
+}
+
 pub trait VectorApp {
     fn get_path(&mut self, frame: u64) -> &Path;
 

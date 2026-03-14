@@ -52,8 +52,8 @@ impl CubeDemo {
             "Hello",
             0,
             16,
-            1.0,
-            1.0,
+            2.0,
+            2.0,
             (255, 0, 0),
             // fonts::ROMANS,
         ));
@@ -61,8 +61,8 @@ impl CubeDemo {
             "World",
             176,
             240,
-            1.0,
-            1.0,
+            2.0,
+            2.0,
             (255, 0, 0),
             // fonts::ROMANS,
         ));

@@ -1,9 +1,6 @@
 use crate::point::Point;
-// use hershey_text::{FontMapping, render_text};
-// use newstroke_text::render_text;
-use chr_text::render_text;
-
 use alloc::vec::Vec;
+use vector_text::{HersheyFont, VectorFont, render_text};
 
 fn map_to_dac(v: f32) -> u8 {
     v.clamp(0.0, 255.0) as u8
@@ -16,7 +13,7 @@ const DT_MIN: u16 = 0; // µs
 const DT_MAX: u16 = 500; // µs
 const CORNER_DWELL_US: u16 = 10; // µs at sharp corners
 
-fn distance(a: &chr_text::Point, b: &chr_text::Point, xs: f32, ys: f32) -> f32 {
+fn distance(a: &vector_text::Point, b: &vector_text::Point, xs: f32, ys: f32) -> f32 {
     let dx = (b.x as f32 - a.x as f32) * xs;
     let dy = (b.y as f32 - a.y as f32) * ys;
     libm::sqrtf(dx * dx + dy * dy)
@@ -37,7 +34,7 @@ pub fn text_to_path_gradient<F>(
 where
     F: Fn(f32) -> (u8, u8, u8),
 {
-    let strokes = render_text(text);
+    let strokes = render_text(text, VectorFont::HersheyFont(HersheyFont::Romans));
     let mut points = Vec::new();
 
     if strokes.is_empty() {

@@ -5,7 +5,7 @@ use esp_hal::{
 };
 use vector_apps::apps::Controls;
 
-pub struct Nunchuck<'a> {
+pub struct ClassicController<'a> {
     i2c: I2c<'a, Blocking>,
 }
 
@@ -20,7 +20,7 @@ fn clamp_joystick(val: i16) -> i8 {
     }
 }
 
-impl<'a> Nunchuck<'a> {
+impl<'a> ClassicController<'a> {
     pub fn new(
         i2c: impl Instance + 'a,
         sda: impl PeripheralOutput<'a>,

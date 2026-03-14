@@ -77,6 +77,7 @@ impl<'a> Cursor<'a> {
     }
 }
 
+#[allow(unused)]
 struct IldaHeader {
     format: u8,
     name: String,
@@ -87,7 +88,7 @@ struct IldaHeader {
     projector_number: u8,
 }
 
-const LASTPOINT_BIT: u8 = 0b10000000;
+// const LASTPOINT_BIT: u8 = 0b10000000;
 const BLANKING_BIT: u8 = 0b01000000;
 
 pub const ILDA_DEFAULT_PALETTE: [(u8, u8, u8); 64] = [

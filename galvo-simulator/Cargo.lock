@@ -587,10 +587,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "chr-text"
-version = "0.1.0"
-
-[[package]]
 name = "clipboard-win"
 version = "5.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1370,10 +1366,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc0fef456e4baa96da950455cd02c081ca953b141298e41db3fc7e36b1da849c"
 
 [[package]]
-name = "hershey-text"
-version = "0.1.0"
-
-[[package]]
 name = "hex"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1809,10 +1801,6 @@ checksum = "ee6cda3051665f1fb8d9e08fc35c96d5a244fb1be711a03b71118828afc9a873"
 dependencies = [
  "jni-sys",
 ]
-
-[[package]]
-name = "newstroke-text"
-version = "0.1.0"
 
 [[package]]
 name = "nohash-hasher"
@@ -2974,12 +2962,55 @@ dependencies = [
 name = "vector-apps"
 version = "0.1.0"
 dependencies = [
- "chr-text",
- "hershey-text",
  "itertools",
  "jiff",
  "libm",
- "newstroke-text",
+ "vector-text",
+]
+
+[[package]]
+name = "vector-text"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a8cf87f4979c77a35d4438340eb3c7e049ef97001119d67d2a9dfd8e213897f7"
+dependencies = [
+ "vector-text-borland",
+ "vector-text-core",
+ "vector-text-hershey",
+ "vector-text-newstroke",
+]
+
+[[package]]
+name = "vector-text-borland"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "537ba2f0bbd3b7b8429c42f6614735937452be1d288c6e0ae6b304d040323b1f"
+dependencies = [
+ "vector-text-core",
+]
+
+[[package]]
+name = "vector-text-core"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "31b49d3281c414d88b753748b268e171d3413d3a517641098f48bdb3d20260d8"
+
+[[package]]
+name = "vector-text-hershey"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4f1bb6fb8ef91541754ad065421dab1fa3542604528d5fbeec72cc4371f2bc5f"
+dependencies = [
+ "vector-text-core",
+]
+
+[[package]]
+name = "vector-text-newstroke"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "db6382fee372c437740cdd390d78d51eccd0646ef99b0f41d244d8d613a9fd51"
+dependencies = [
+ "vector-text-core",
 ]
 
 [[package]]

@@ -425,7 +425,7 @@ impl VectorApp for Mbta {
         &self.path
     }
 
-    fn handle_controls(&mut self, controls: Controls) {
+    fn handle_controls(&mut self, _controls: Controls) {
         // let cos_lat = libm::cosf(self.lat.to_radians());
 
         // self.lat += controls.y as f32 * 1000.0 / METERS_PER_DEG;

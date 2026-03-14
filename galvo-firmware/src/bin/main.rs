@@ -18,6 +18,7 @@ use esp_hal::delay::Delay;
 use esp_hal::ledc::timer::TimerIFace;
 use esp_hal::ledc::{Ledc, LowSpeed, timer};
 use esp_hal::otg_fs::{Usb, UsbBus};
+use esp_hal::peripherals;
 use esp_hal::rng::Rng;
 use esp_hal::rtc_cntl::Rtc;
 use esp_hal::time::Rate;
@@ -26,12 +27,12 @@ use esp_radio::Controller;
 use galvo_driver::network::{
     RtcTimeSource, SharedRtc, connection, get_mastodon_status, get_time_ntp, net_task,
 };
-use galvo_driver::nunchuck::Nunchuck;
 use galvo_driver::protocol::{Command, Response};
+use galvo_driver::wii_accessory::WiiAccessory;
 use usb_device::prelude::{UsbDeviceBuilder, UsbVidPid};
 use usbd_serial::{SerialPort, USB_CLASS_CDC};
 use vector_apps::apps::clock::Clock;
-use vector_apps::apps::{self, VectorApp};
+use vector_apps::apps::{self, Controls, VectorApp};
 
 use log::info;
 
@@ -82,12 +83,6 @@ async fn main(spawner: Spawner) -> ! {
 
     let delay = Delay::new();
 
-    // Adafruit QtPy
-    // let mut indicator = IndicatorLed::new(peripherals.GPIO38, peripherals.RMT, peripherals.GPIO39);
-    // TinyS2
-    let mut indicator = IndicatorLed::new(peripherals.GPIO2, peripherals.RMT, peripherals.GPIO1);
-    indicator.set_color(smart_leds::colors::RED);
-
     let ledc = Ledc::new(peripherals.LEDC);
     let mut timer = ledc.timer::<LowSpeed>(timer::Number::Timer0);
     timer
@@ -99,18 +94,21 @@ async fn main(spawner: Spawner) -> ! {
         .unwrap();
 
     let mut lasers = Lasers::new(
+        peripherals.GPIO1,
+        peripherals.GPIO9,
+        peripherals.GPIO2,
+        peripherals.GPIO3,
         peripherals.GPIO4,
-        peripherals.GPIO5,
-        peripherals.GPIO6,
         ledc,
         &timer,
-        peripherals.DAC2,
-        peripherals.GPIO18,
         peripherals.DAC1,
         peripherals.GPIO17,
+        peripherals.DAC2,
+        peripherals.GPIO18,
     );
 
-    let mut nunchuck = Nunchuck::new(peripherals.I2C0, peripherals.GPIO8, peripherals.GPIO9);
+    let mut controls_p1 = WiiAccessory::new(peripherals.I2C0, peripherals.GPIO5, peripherals.GPIO6);
+    let mut controls_p2 = WiiAccessory::new(peripherals.I2C1, peripherals.GPIO7, peripherals.GPIO8);
 
     let usb = Usb::new(peripherals.USB0, peripherals.GPIO20, peripherals.GPIO19);
     let usb_bus = UsbBus::new(usb, unsafe { &mut *core::ptr::addr_of_mut!(EP_MEMORY) });
@@ -148,11 +146,11 @@ async fn main(spawner: Spawner) -> ! {
     spawner.spawn(connection(controller)).ok();
     spawner.spawn(net_task(runner)).ok();
 
-    stack.wait_config_up().await;
+    // info!("Waiting for network...");
 
-    indicator.set_color(smart_leds::colors::YELLOW);
+    // stack.wait_config_up().await;
 
-    get_time_ntp(&stack, rtc).await;
+    // get_time_ntp(&stack, rtc).await;
 
     // let post = get_mastodon_status(&stack).await;
 
@@ -160,20 +158,20 @@ async fn main(spawner: Spawner) -> ! {
     let mut serial_rx_length: usize = 0;
 
     let mut apps: Vec<Box<dyn VectorApp>> = Vec::with_capacity(5);
-    apps.push(Box::new(AlphabetDemo::new(String::from("ABCDEFGH"))));
-    apps.push(Box::new(CubeDemo::new()));
+    // apps.push(Box::new(AlphabetDemo::new(String::from("ABCDEFGH"))));
+    // apps.push(Box::new(CubeDemo::new()));
     apps.push(Box::new(Asteroids::new()));
-    apps.push(Box::new(Maps::new()));
-    apps.push(Box::new(Ilda::new()));
+    // apps.push(Box::new(Maps::new()));
+    // apps.push(Box::new(Ilda::new()));
     // apps.push(Box::new(Align::new()));
-    apps.push(Box::new(Clock::new(RtcTimeSource::new(rtc))));
+    // apps.push(Box::new(Clock::new(RtcTimeSource::new(rtc))));
 
     let mut active_demo: Box<dyn apps::VectorApp> = Box::new(Cycle::new(apps));
     // let mut active_demo: Box<dyn apps::VectorApp> = Box::new(Asteroids::new());
 
     let mut frameno: u64 = 0;
 
-    indicator.set_color(smart_leds::colors::GREEN);
+    info!("Galvo system initialized!");
 
     loop {
         if usb_dev.poll(&mut [&mut serial]) {
@@ -201,7 +199,7 @@ async fn main(spawner: Spawner) -> ! {
                     {
                         match cmd {
                             Command::SetIndicatorLight { r, g, b } => {
-                                indicator.set_color(smart_leds::RGB { r, g, b });
+                                // indicator.set_color(smart_leds::RGB { r, g, b });
                             }
                         }
 
@@ -219,10 +217,18 @@ async fn main(spawner: Spawner) -> ! {
             }
         }
 
+        // if lasers.is_interlock_active() {
+        //     info!("Key in ON position");
+        // } else {
+        //     info!("Key in OFF position");
+        // }
+
         if frameno % 4 == 0 {
-            let controls = nunchuck.get_input();
+            let player_1: Controls = controls_p1.get_input().into();
+            let player_2: Controls = controls_p2.get_input().into();
             // info!("controls state: {:?}", controls);
-            active_demo.handle_controls(controls);
+            let merged = player_1.merge(player_2);
+            active_demo.handle_controls(merged);
         }
 
         frameno += 1;

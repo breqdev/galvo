@@ -3,7 +3,7 @@
 pub mod lasers;
 pub mod led;
 pub mod network;
-pub mod nunchuck;
 pub mod protocol;
+pub mod wii_accessory;
 
 extern crate alloc;
