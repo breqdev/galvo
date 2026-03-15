@@ -24,8 +24,11 @@ use vector_apps::apps::clock::TimeSource;
 
 const NTP_SERVER: &str = "pool.ntp.org";
 
-const SSID: &str = "doggirl daycare";
-const PASSWORD: &str = "puppykittenT4T";
+// const SSID: &str = "doggirl daycare";
+// const PASSWORD: &str = "puppykittenT4T";
+
+const SSID: &str = "MiaNet";
+const PASSWORD: &str = "chiaseed";
 
 pub type SharedRtc = Mutex<CriticalSectionRawMutex, Rtc<'static>>;
 

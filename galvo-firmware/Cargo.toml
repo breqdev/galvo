@@ -87,6 +87,7 @@ jiff = { version = "0.2.10", default-features = false, features = ["static"] }
 embassy-sync = "0.7.2"
 embedded-tls ={ version = "0.17.0", default-features = false, features = ["alloc"] }
 rand_core = "0.6.4"
+wii-accessories = { git = "https://github.com/breqdev/wii-accessories", version = "0.1.0" }
 
 [profile.dev]
 # Rust debug is too slow.

@@ -15,6 +15,7 @@ use embassy_time::{Duration, Timer};
 use esp_backtrace as _;
 use esp_hal::clock::CpuClock;
 use esp_hal::delay::Delay;
+use esp_hal::i2c::master::{Config, I2c};
 use esp_hal::ledc::timer::TimerIFace;
 use esp_hal::ledc::{Ledc, LowSpeed, timer};
 use esp_hal::otg_fs::{Usb, UsbBus};
@@ -24,15 +25,16 @@ use esp_hal::rtc_cntl::Rtc;
 use esp_hal::time::Rate;
 use esp_hal::timer::timg::TimerGroup;
 use esp_radio::Controller;
+use galvo_driver::controls::parse_report;
 use galvo_driver::network::{
     RtcTimeSource, SharedRtc, connection, get_mastodon_status, get_time_ntp, net_task,
 };
 use galvo_driver::protocol::{Command, Response};
-use galvo_driver::wii_accessory::WiiAccessory;
 use usb_device::prelude::{UsbDeviceBuilder, UsbVidPid};
 use usbd_serial::{SerialPort, USB_CLASS_CDC};
 use vector_apps::apps::clock::Clock;
 use vector_apps::apps::{self, Controls, VectorApp};
+use wii_accessories::WiiAccessory;
 
 use log::info;
 
@@ -107,8 +109,22 @@ async fn main(spawner: Spawner) -> ! {
         peripherals.GPIO18,
     );
 
-    let mut controls_p1 = WiiAccessory::new(peripherals.I2C0, peripherals.GPIO5, peripherals.GPIO6);
-    let mut controls_p2 = WiiAccessory::new(peripherals.I2C1, peripherals.GPIO7, peripherals.GPIO8);
+    let mut controls_p1 = {
+        let i2c = I2c::new(peripherals.I2C0, Config::default())
+            .unwrap()
+            .with_sda(peripherals.GPIO5)
+            .with_scl(peripherals.GPIO6);
+
+        WiiAccessory::new(i2c)
+    };
+    let mut controls_p2 = {
+        let i2c = I2c::new(peripherals.I2C1, Config::default())
+            .unwrap()
+            .with_sda(peripherals.GPIO7)
+            .with_scl(peripherals.GPIO8);
+
+        WiiAccessory::new(i2c)
+    };
 
     let usb = Usb::new(peripherals.USB0, peripherals.GPIO20, peripherals.GPIO19);
     let usb_bus = UsbBus::new(usb, unsafe { &mut *core::ptr::addr_of_mut!(EP_MEMORY) });
@@ -224,8 +240,8 @@ async fn main(spawner: Spawner) -> ! {
         // }
 
         if frameno % 4 == 0 {
-            let player_1: Controls = controls_p1.get_input().into();
-            let player_2: Controls = controls_p2.get_input().into();
+            let player_1 = parse_report(controls_p1.get_input());
+            let player_2 = parse_report(controls_p2.get_input());
             // info!("controls state: {:?}", controls);
             let merged = player_1.merge(player_2);
             active_demo.handle_controls(merged);
