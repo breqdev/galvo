@@ -162,11 +162,11 @@ async fn main(spawner: Spawner) -> ! {
     spawner.spawn(connection(controller)).ok();
     spawner.spawn(net_task(runner)).ok();
 
-    // info!("Waiting for network...");
+    info!("Waiting for network...");
 
-    // stack.wait_config_up().await;
+    stack.wait_config_up().await;
 
-    // get_time_ntp(&stack, rtc).await;
+    get_time_ntp(&stack, rtc).await;
 
     // let post = get_mastodon_status(&stack).await;
 
@@ -175,12 +175,12 @@ async fn main(spawner: Spawner) -> ! {
 
     let mut apps: Vec<Box<dyn VectorApp>> = Vec::with_capacity(5);
     // apps.push(Box::new(AlphabetDemo::new(String::from("ABCDEFGH"))));
-    // apps.push(Box::new(CubeDemo::new()));
+    apps.push(Box::new(CubeDemo::new()));
     apps.push(Box::new(Asteroids::new()));
-    // apps.push(Box::new(Maps::new()));
+    apps.push(Box::new(Maps::new()));
     // apps.push(Box::new(Ilda::new()));
     // apps.push(Box::new(Align::new()));
-    // apps.push(Box::new(Clock::new(RtcTimeSource::new(rtc))));
+    apps.push(Box::new(Clock::new(RtcTimeSource::new(rtc))));
 
     let mut active_demo: Box<dyn apps::VectorApp> = Box::new(Cycle::new(apps));
     // let mut active_demo: Box<dyn apps::VectorApp> = Box::new(Asteroids::new());

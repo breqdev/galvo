@@ -31,10 +31,10 @@ impl TimeSource for SystemTimeSource {
 
 pub fn painter(tx: Sender<Point>, rx: Receiver<Controls>) {
     let mut app = Cycle::new(vec![
-        Box::new(AlphabetDemo::new("LITT.CHR Aa1!".to_string())),
+        // Box::new(AlphabetDemo::new("LITT.CHR Aa1!".to_string())),
         // Box::new(CubeDemo::new()),
         // Box::new(Asteroids::new()),
-        // Box::new(Maps::new()),
+        Box::new(Maps::new()),
         // Box::new(Ilda::new()),
         // Box::new(Mbta::new()),
         // Box::new(Clock::new(SystemTimeSource)),
@@ -43,6 +43,8 @@ pub fn painter(tx: Sender<Point>, rx: Receiver<Controls>) {
     let mut frame = 0;
     loop {
         let path = app.get_path(frame);
+
+        println!("Got {} points", path.len());
 
         for point in path {
             tx.send(*point).unwrap();

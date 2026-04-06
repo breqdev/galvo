@@ -15,33 +15,62 @@ pub struct LatLon {
 pub type Polyline<T> = Vec<T>;
 pub type Polylines<T> = Vec<Polyline<T>>;
 
-pub fn parse_latlon_file(data: &str) -> Polylines<LatLon> {
-    let mut lines = Vec::new();
-    let mut current = Vec::new();
+struct ColoredLine<T> {
+    points: Vec<T>,
+    color: (u8, u8, u8),
+}
+
+// --- Parsing ---
+
+fn parse_latlon_file(data: &str) -> Vec<ColoredLine<LatLon>> {
+    let mut result = Vec::new();
+    let mut current_points: Vec<LatLon> = Vec::new();
+    let mut current_color: (u8, u8, u8) = (128, 128, 128);
 
     for line in data.lines() {
         let line = line.trim();
-        if line.is_empty() {
-            if current.len() >= 2 {
-                lines.push(current);
+
+        if line.starts_with('#') {
+            let parts: Vec<&str> = line.split_whitespace().collect();
+            if parts.len() == 5 {
+                let r = (parts[2].parse::<f32>().unwrap_or(0.5) * 255.0) as u8;
+                let g = (parts[3].parse::<f32>().unwrap_or(0.5) * 255.0) as u8;
+                let b = (parts[4].parse::<f32>().unwrap_or(0.5) * 255.0) as u8;
+                current_color = (r, g, b);
             }
-            current = Vec::new();
+            continue;
+        }
+
+        if line.is_empty() {
+            if current_points.len() >= 2 {
+                result.push(ColoredLine {
+                    points: current_points,
+                    color: current_color,
+                });
+            }
+            current_points = Vec::new();
             continue;
         }
 
         let mut it = line.split_whitespace();
-        let lon: f32 = it.next().unwrap().parse().unwrap();
-        let lat: f32 = it.next().unwrap().parse().unwrap();
-
-        current.push(LatLon { lon, lat });
+        if let (Some(lon_s), Some(lat_s)) = (it.next(), it.next()) {
+            if let (Ok(lon), Ok(lat)) = (lon_s.parse::<f32>(), lat_s.parse::<f32>()) {
+                current_points.push(LatLon { lon, lat });
+            }
+        }
     }
 
-    if current.len() >= 2 {
-        lines.push(current);
+    if current_points.len() >= 2 {
+        result.push(ColoredLine {
+            points: current_points,
+            color: current_color,
+        });
     }
 
-    lines
+    result
 }
+
+// --- Projection & geometry (all operating on ColoredLine<T>) ---
 
 const METERS_PER_DEG: f32 = 111_320.0;
 
@@ -104,20 +133,20 @@ fn clip_segment(a: Vec2, b: Vec2, half: f32) -> Option<(Vec2, Vec2)> {
 }
 
 fn project_and_crop(
-    input: &Polylines<LatLon>,
+    input: &[ColoredLine<LatLon>],
     lat0: f32,
     lon0: f32,
     side_m: f32,
-) -> Polylines<Vec2> {
+) -> Vec<ColoredLine<Vec2>> {
     let half = side_m * 0.5;
     let cos_lat0 = libm::cosf(lat0.to_radians());
 
     let mut out = Vec::new();
 
     for line in input {
-        let mut current = Vec::new();
+        let mut current: Vec<Vec2> = Vec::new();
 
-        for seg in line.windows(2) {
+        for seg in line.points.windows(2) {
             let a = project(seg[0], lat0, lon0, cos_lat0);
             let b = project(seg[1], lat0, lon0, cos_lat0);
 
@@ -127,20 +156,26 @@ fn project_and_crop(
                 }
                 current.push(cb);
             } else if current.len() >= 2 {
-                out.push(current);
+                out.push(ColoredLine {
+                    points: current,
+                    color: line.color,
+                });
                 current = Vec::new();
             }
         }
 
         if current.len() >= 2 {
-            out.push(current);
+            out.push(ColoredLine {
+                points: current,
+                color: line.color,
+            });
         }
     }
 
     out
 }
 
-fn merge_connected_lines(mut lines: Polylines<Vec2>, tol: f32) -> Polylines<Vec2> {
+fn merge_connected_lines(mut lines: Vec<ColoredLine<Vec2>>, tol: f32) -> Vec<ColoredLine<Vec2>> {
     let tol2 = tol * tol;
     let mut merged = Vec::new();
 
@@ -152,28 +187,33 @@ fn merge_connected_lines(mut lines: Polylines<Vec2>, tol: f32) -> Polylines<Vec2
 
             let mut i = 0;
             while i < lines.len() {
-                let other = &lines[i];
+                // Only merge lines of the same color
+                if lines[i].color != line.color {
+                    i += 1;
+                    continue;
+                }
 
-                let (a0, a1) = (line[0], *line.last().unwrap());
-                let (b0, b1) = (other[0], *other.last().unwrap());
+                let (a0, a1) = (line.points[0], *line.points.last().unwrap());
+                let (b0, b1) = (lines[i].points[0], *lines[i].points.last().unwrap());
+                let other_pts = &lines[i].points;
 
                 let matched = if a1.distance(b0) < tol2 {
-                    line.extend_from_slice(&other[1..]);
+                    line.points.extend_from_slice(&other_pts[1..]);
                     true
                 } else if a1.distance(b1) < tol2 {
-                    for p in other[..other.len() - 1].iter().rev() {
-                        line.push(*p);
+                    for p in other_pts[..other_pts.len() - 1].iter().rev() {
+                        line.points.push(*p);
                     }
                     true
                 } else if a0.distance(b1) < tol2 {
-                    let mut new = other[..other.len() - 1].to_vec();
-                    new.extend(line);
-                    line = new;
+                    let mut new = other_pts[..other_pts.len() - 1].to_vec();
+                    new.extend(line.points);
+                    line.points = new;
                     true
                 } else if a0.distance(b0) < tol2 {
-                    let mut new = other[1..].iter().rev().cloned().collect::<Vec<_>>();
-                    new.extend(line);
-                    line = new;
+                    let mut new = other_pts[1..].iter().rev().cloned().collect::<Vec<_>>();
+                    new.extend(line.points);
+                    line.points = new;
                     true
                 } else {
                     false
@@ -195,7 +235,7 @@ fn merge_connected_lines(mut lines: Polylines<Vec2>, tol: f32) -> Polylines<Vec2
     merged
 }
 
-fn greedy_order_lines(mut lines: Polylines<Vec2>) -> Polylines<Vec2> {
+fn greedy_order_lines(mut lines: Vec<ColoredLine<Vec2>>) -> Vec<ColoredLine<Vec2>> {
     if lines.is_empty() {
         return lines;
     }
@@ -204,15 +244,15 @@ fn greedy_order_lines(mut lines: Polylines<Vec2>) -> Polylines<Vec2> {
     ordered.push(lines.pop().unwrap());
 
     while !lines.is_empty() {
-        let last = *ordered.last().unwrap().last().unwrap();
+        let last = *ordered.last().unwrap().points.last().unwrap();
 
         let mut best_i = 0;
         let mut best_d = f32::MAX;
         let mut reverse = false;
 
         for (i, line) in lines.iter().enumerate() {
-            let d0 = last.distance(line[0]);
-            let d1 = last.distance(*line.last().unwrap());
+            let d0 = last.distance(line.points[0]);
+            let d1 = last.distance(*line.points.last().unwrap());
 
             if d0 < best_d {
                 best_d = d0;
@@ -228,7 +268,7 @@ fn greedy_order_lines(mut lines: Polylines<Vec2>) -> Polylines<Vec2> {
 
         let mut next = lines.swap_remove(best_i);
         if reverse {
-            next.reverse();
+            next.points.reverse();
         }
         ordered.push(next);
     }
@@ -236,15 +276,17 @@ fn greedy_order_lines(mut lines: Polylines<Vec2>) -> Polylines<Vec2> {
     ordered
 }
 
-fn normalize(lines: &mut Polylines<Vec2>, side_m: f32) {
+fn normalize(lines: &mut Vec<ColoredLine<Vec2>>, side_m: f32) {
     let half = side_m * 0.5;
     for line in lines {
-        for p in line {
+        for p in &mut line.points {
             p.x /= half;
             p.y /= half;
         }
     }
 }
+
+// --- Maps app ---
 
 pub struct Maps {
     path: Path,
@@ -260,8 +302,8 @@ impl Maps {
 
         let mut map = Self {
             path,
-            lat: 42.39625701047068,
-            lon: -71.10866957285928,
+            lat: 42.396521362143275,
+            lon: -71.12230238395239,
         };
         map.generate_path();
         map
@@ -270,7 +312,7 @@ impl Maps {
     fn generate_path(&mut self) {
         self.path.clear();
 
-        let raw = include_str!("roads-small.txt");
+        let raw = include_str!("roads.txt");
         let latlon = parse_latlon_file(raw);
 
         let mut lines = project_and_crop(&latlon, self.lat, self.lon, SIDE_METERS);
@@ -284,12 +326,12 @@ impl Maps {
         const STEP: f32 = 1.0;
 
         for line in &lines {
-            if line.len() < 2 {
+            if line.points.len() < 2 {
                 continue;
             }
+            let color = line.color;
 
-            for (i, p) in line.iter().enumerate() {
-                // Map normalized [-1,1] → DAC [0,255]
+            for (i, p) in line.points.iter().enumerate() {
                 let x = libm::roundf((p.x + 1.0) * 0.5 * 255.0) as u8;
                 let y = libm::roundf((-p.y + 1.0) * 0.5 * 255.0) as u8;
 
@@ -316,7 +358,7 @@ impl Maps {
                     self.path.push(Point {
                         x,
                         y,
-                        color: (255, 0, 0),
+                        color,
                         delay: 100,
                     });
 
@@ -338,7 +380,7 @@ impl Maps {
                         self.path.push(Point {
                             x: ix,
                             y: iy,
-                            color: (255, 0, 0),
+                            color,
                             delay: 10,
                         });
                     }
@@ -347,7 +389,7 @@ impl Maps {
                     self.path.push(Point {
                         x,
                         y,
-                        color: (255, 0, 0),
+                        color,
                         delay: 100,
                     });
 
@@ -364,6 +406,7 @@ impl Maps {
         });
     }
 }
+
 impl VectorApp for Maps {
     fn get_path(&mut self, _frame: u64) -> &Path {
         &self.path
@@ -371,10 +414,8 @@ impl VectorApp for Maps {
 
     fn handle_controls(&mut self, controls: Controls) {
         let cos_lat = libm::cosf(self.lat.to_radians());
-
-        self.lat += controls.y as f32 * 50.0 / METERS_PER_DEG;
-        self.lon += controls.x as f32 * 50.0 / (METERS_PER_DEG * cos_lat);
-
+        self.lat += controls.y as f32 * 1.0 / METERS_PER_DEG;
+        self.lon += controls.x as f32 * 1.0 / (METERS_PER_DEG * cos_lat);
         self.generate_path();
     }
 }

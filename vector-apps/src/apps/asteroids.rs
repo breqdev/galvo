@@ -104,14 +104,14 @@ impl Asteroids {
 
     fn step(&mut self, controls: Controls) {
         // handle controls
-        self.ship.rvel += controls.x as f32 * -0.02;
+        self.ship.rvel += controls.x as f32 * -0.0002;
 
         let forward = Vec2 {
             x: libm::sinf(self.ship.rot),
             y: libm::cosf(self.ship.rot),
         };
 
-        self.ship.vel = (self.ship.vel * 0.9) + (forward * (controls.y as f32 * 0.005));
+        self.ship.vel = (self.ship.vel * 0.9) + (forward * (controls.y as f32 * 0.0005));
 
         // rotate ship slowly
         self.ship.pos = (self.ship.pos + self.ship.vel).wrap();
@@ -123,7 +123,7 @@ impl Asteroids {
             a.pos = (a.pos + a.vel).wrap();
         }
 
-        if controls.b {
+        if controls.a {
             if !self.currently_shooting {
                 self.bullets.push(Bullet {
                     pos: self.ship.pos,

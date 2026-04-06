@@ -42,44 +42,56 @@ fn map_to_dac(v: f32) -> u8 {
 pub struct CubeDemo {
     points: Vec<Point>,
     static_points: Vec<Point>,
+
+    velocity: (f32, f32),
 }
 
 impl CubeDemo {
     pub fn new() -> Self {
         let mut static_points = Vec::new();
 
-        static_points.append(&mut text_to_path(
-            "Hello",
-            0,
-            16,
-            2.0,
-            2.0,
-            (255, 0, 0),
-            // fonts::ROMANS,
-        ));
-        static_points.append(&mut text_to_path(
-            "World",
-            176,
-            240,
-            2.0,
-            2.0,
-            (255, 0, 0),
-            // fonts::ROMANS,
-        ));
+        // static_points.append(&mut text_to_path(
+        //     "Hello",
+        //     0,
+        //     16,
+        //     2.0,
+        //     2.0,
+        //     (255, 0, 0),
+        //     // fonts::ROMANS,
+        // ));
+        // static_points.append(&mut text_to_path(
+        //     "World",
+        //     176,
+        //     240,
+        //     2.0,
+        //     2.0,
+        //     (255, 0, 0),
+        //     // fonts::ROMANS,
+        // ));
+
+        static_points.push(Point {
+            x: 128,
+            y: 128,
+            color: (0, 0, 0),
+            delay: 40,
+        });
 
         Self {
             points: Vec::new(),
             static_points,
+            velocity: (0.02, 0.03),
         }
     }
 }
 
+const SPEED_MULTIPLIER: u16 = 1;
+
 impl VectorApp for CubeDemo {
     fn get_path(&mut self, frame: u64) -> &Path {
-        let color = (0, 0, 255);
+        let color = (255, 255, 255);
 
-        let angle_x = frame as f32 * 0.02;
-        let angle_y = frame as f32 * 0.03;
+        let angle_x = frame as f32 * self.velocity.0;
+        let angle_y = frame as f32 * self.velocity.1;
 
         self.points.clear();
 
@@ -119,7 +131,7 @@ impl VectorApp for CubeDemo {
                 x: px0,
                 y: py0,
                 color: (0, 0, 0),
-                delay: 400,
+                delay: 400 * SPEED_MULTIPLIER,
             });
 
             // Draw line with stepping
@@ -135,7 +147,7 @@ impl VectorApp for CubeDemo {
                     x: xi as u8,
                     y: yi as u8,
                     color,
-                    delay: 50,
+                    delay: 50 * SPEED_MULTIPLIER,
                 });
             }
 
@@ -143,12 +155,17 @@ impl VectorApp for CubeDemo {
                 x: px1,
                 y: py1,
                 color,
-                delay: 100,
+                delay: 100 * SPEED_MULTIPLIER,
             });
         }
 
         self.points.extend(&self.static_points);
 
         &self.points
+    }
+
+    fn handle_controls(&mut self, controls: super::Controls) {
+        self.velocity.0 += controls.x as f32 * 0.0001;
+        self.velocity.1 += controls.y as f32 * 0.0001;
     }
 }
