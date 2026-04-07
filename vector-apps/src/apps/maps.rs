@@ -292,6 +292,7 @@ pub struct Maps {
     path: Path,
     lat: f32,
     lon: f32,
+    file: Vec<ColoredLine<LatLon>>,
 }
 
 const SIDE_METERS: f32 = 400.0;
@@ -300,11 +301,16 @@ impl Maps {
     pub fn new() -> Self {
         let path: Path = Vec::new();
 
+        let raw = include_str!("roads.txt");
+        let file = parse_latlon_file(raw);
+
         let mut map = Self {
             path,
             lat: 42.396521362143275,
             lon: -71.12230238395239,
+            file,
         };
+
         map.generate_path();
         map
     }
@@ -312,10 +318,7 @@ impl Maps {
     fn generate_path(&mut self) {
         self.path.clear();
 
-        let raw = include_str!("roads.txt");
-        let latlon = parse_latlon_file(raw);
-
-        let mut lines = project_and_crop(&latlon, self.lat, self.lon, SIDE_METERS);
+        let mut lines = project_and_crop(&self.file, self.lat, self.lon, SIDE_METERS);
         lines = merge_connected_lines(lines, 0.5); // 0.5m tolerance
         lines = greedy_order_lines(lines);
         normalize(&mut lines, SIDE_METERS);
@@ -413,9 +416,12 @@ impl VectorApp for Maps {
     }
 
     fn handle_controls(&mut self, controls: Controls) {
-        let cos_lat = libm::cosf(self.lat.to_radians());
-        self.lat += controls.y as f32 * 1.0 / METERS_PER_DEG;
-        self.lon += controls.x as f32 * 1.0 / (METERS_PER_DEG * cos_lat);
-        self.generate_path();
+        if controls.x != 0 || controls.y != 0 {
+            let cos_lat = libm::cosf(self.lat.to_radians());
+            self.lat += controls.y as f32 * 1.0 / METERS_PER_DEG;
+            self.lon += controls.x as f32 * 1.0 / (METERS_PER_DEG * cos_lat);
+
+            self.generate_path();
+        }
     }
 }
