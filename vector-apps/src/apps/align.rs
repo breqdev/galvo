@@ -16,7 +16,8 @@ impl Align {
         points.push(Point {
             x: 128,
             y: 128,
-            color: (64, 128, 64),
+            // color: (64, 128, 64),
+            color: (255, 255, 255),
             delay: 1000,
         });
 

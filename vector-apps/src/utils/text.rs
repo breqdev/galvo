@@ -1,13 +1,13 @@
 use crate::point::Point;
 use alloc::vec::Vec;
-use vector_text::{HersheyFont, VectorFont, render_text};
+use vector_text::{BorlandFont, HersheyFont, VectorFont, render_text};
 
 fn map_to_dac(v: f32) -> u8 {
     v.clamp(0.0, 255.0) as u8
 }
 
 const DRAW_VELOCITY: f32 = 20000.0; // galvo units / second
-const TRAVEL_VELOCITY: f32 = 40000.0; // faster when laser off
+const TRAVEL_VELOCITY: f32 = 20000.0; // faster when laser off
 const MAX_STEP: f32 = 4.0; // max distance per emitted point
 const DT_MIN: u16 = 0; // µs
 const DT_MAX: u16 = 500; // µs
@@ -34,7 +34,9 @@ pub fn text_to_path_gradient<F>(
 where
     F: Fn(f32) -> (u8, u8, u8),
 {
-    let strokes = render_text(text, VectorFont::HersheyFont(HersheyFont::Romans));
+    let strokes = render_text(text, VectorFont::HersheyFont(HersheyFont::Gotheng));
+    // let strokes = render_text(text, VectorFont::NewstrokeFont(()));
+    // let strokes = render_text(text, VectorFont::BorlandFont(BorlandFont::Litt));
     let mut points = Vec::new();
 
     if strokes.is_empty() {
@@ -53,7 +55,7 @@ where
         } else {
             (0, 0, 0)
         },
-        delay: 300,
+        delay: 1000,
     });
 
     for i in 1..strokes.len() {

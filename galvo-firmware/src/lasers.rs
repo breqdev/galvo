@@ -16,8 +16,8 @@ pub struct Lasers<'a> {
     red: Channel<'a, LowSpeed>,
     green: Channel<'a, LowSpeed>,
     blue: Channel<'a, LowSpeed>,
-    x: Dac<'a, DAC1<'a>>,
-    y: Dac<'a, DAC2<'a>>,
+    x: Dac<'a, DAC2<'a>>,
+    y: Dac<'a, DAC1<'a>>,
 }
 
 impl<'a> Lasers<'a> {
@@ -29,10 +29,10 @@ impl<'a> Lasers<'a> {
         blue: impl PeripheralOutput<'a>,
         mut ledc: Ledc<'a>,
         timer: &'a Timer<'a, LowSpeed>,
-        dac_x: DAC1<'a>,
-        pin_x: GPIO17<'a>,
-        dac_y: DAC2<'a>,
-        pin_y: GPIO18<'a>,
+        dac_x: DAC2<'a>,
+        pin_x: GPIO18<'a>,
+        dac_y: DAC1<'a>,
+        pin_y: GPIO17<'a>,
     ) -> Self {
         ledc.set_global_slow_clock(LSGlobalClkSource::APBClk);
 

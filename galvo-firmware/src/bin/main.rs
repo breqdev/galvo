@@ -33,6 +33,7 @@ use galvo_driver::protocol::{Command, Response};
 use usb_device::prelude::{UsbDeviceBuilder, UsbVidPid};
 use usbd_serial::{SerialPort, USB_CLASS_CDC};
 use vector_apps::apps::clock::Clock;
+use vector_apps::apps::svg::SvgApp;
 use vector_apps::apps::{self, Controls, VectorApp};
 use wii_accessories::WiiAccessory;
 
@@ -103,10 +104,10 @@ async fn main(spawner: Spawner) -> ! {
         peripherals.GPIO4,
         ledc,
         &timer,
-        peripherals.DAC1,
-        peripherals.GPIO17,
         peripherals.DAC2,
         peripherals.GPIO18,
+        peripherals.DAC1,
+        peripherals.GPIO17,
     );
 
     let mut controls_p1 = {
@@ -166,7 +167,7 @@ async fn main(spawner: Spawner) -> ! {
 
     stack.wait_config_up().await;
 
-    get_time_ntp(&stack, rtc).await;
+    // get_time_ntp(&stack, rtc).await;
 
     // let post = get_mastodon_status(&stack).await;
 
@@ -174,13 +175,17 @@ async fn main(spawner: Spawner) -> ! {
     let mut serial_rx_length: usize = 0;
 
     let mut apps: Vec<Box<dyn VectorApp>> = Vec::with_capacity(5);
-    // apps.push(Box::new(AlphabetDemo::new(String::from("ABCDEFGH"))));
-    apps.push(Box::new(CubeDemo::new()));
-    apps.push(Box::new(Asteroids::new()));
-    apps.push(Box::new(Maps::new()));
+    apps.push(Box::new(AlphabetDemo::new(String::from(
+        "Hershey Goth Engbreq.dev",
+        // "  KiCad  NewStroke breq.dev",
+    ))));
+    // apps.push(Box::new(CubeDemo::new()));
+    // apps.push(Box::new(Asteroids::new()));
+    // apps.push(Box::new(Maps::new()));
+    // apps.push(Box::new(SvgApp::new()));
     // apps.push(Box::new(Ilda::new()));
-    // apps.push(Box::new(Align::new()));
-    apps.push(Box::new(Clock::new(RtcTimeSource::new(rtc))));
+    apps.push(Box::new(Align::new()));
+    // apps.push(Box::new(Clock::new(RtcTimeSource::new(rtc))));
 
     let mut active_demo: Box<dyn apps::VectorApp> = Box::new(Cycle::new(apps));
     // let mut active_demo: Box<dyn apps::VectorApp> = Box::new(Asteroids::new());

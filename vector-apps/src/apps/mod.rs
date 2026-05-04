@@ -9,6 +9,7 @@ pub mod cycle;
 pub mod ilda;
 pub mod maps;
 pub mod mbta;
+pub mod svg;
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Controls {

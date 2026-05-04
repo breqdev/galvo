@@ -295,7 +295,7 @@ pub struct Maps {
     file: Vec<ColoredLine<LatLon>>,
 }
 
-const SIDE_METERS: f32 = 400.0;
+const SIDE_METERS: f32 = 600.0;
 
 impl Maps {
     pub fn new() -> Self {
